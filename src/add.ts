@@ -1632,12 +1632,14 @@ export async function runAdd(args: string[], options: AddOptions = {}): Promise<
               blobResult && 'snapshotHash' in skill
                 ? (skill as BlobSkill).snapshotHash
                 : await computeSkillFolderHash(skill.path);
+            const skillPathValue = skillFiles[skill.name];
             await addSkillToLocalLock(
               skill.name,
               {
                 source: lockSource || parsed.url,
                 ref: parsed.ref,
                 sourceType: parsed.type,
+                ...(skillPathValue && { skillPath: skillPathValue }),
                 computedHash,
               },
               cwd
