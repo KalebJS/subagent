@@ -3,34 +3,34 @@ import pc from 'picocolors';
 import { readLocalLock } from './local-lock.ts';
 import { runAdd } from './add.ts';
 import { runSync, parseSyncOptions } from './sync.ts';
-import { getUniversalAgents } from './agents.ts';
+import { agents } from './agents.ts';
 
 /**
- * Install all skills from the local skills-lock.json.
- * Groups skills by source and calls `runAdd` for each group.
+ * Install all subagents from the local subagents-lock.json.
+ * Groups subagents by source and calls `runAdd` for each group.
  *
- * Only installs to .agents/skills/ (universal agents) -- the canonical
- * project-level location. Does not install to agent-specific directories.
+ * Only installs to .agents/agents/ -- the canonical project-level location.
+ * Does not install to agent-specific directories.
  *
- * node_modules skills are handled via experimental_sync.
+ * node_modules subagents are handled via experimental_sync.
  */
 export async function runInstallFromLock(args: string[]): Promise<void> {
   const cwd = process.cwd();
   const lock = await readLocalLock(cwd);
-  const skillEntries = Object.entries(lock.skills);
+  const skillEntries = Object.entries(lock.subagents);
 
   if (skillEntries.length === 0) {
-    p.log.warn('No project skills found in skills-lock.json');
+    p.log.warn('No project subagents found in subagents-lock.json');
     p.log.info(
-      `Add project-level skills with ${pc.cyan('npx skills add <package>')} (without ${pc.cyan('-g')})`
+      `Add project-level subagents with ${pc.cyan('npx subagents add <package>')} (without ${pc.cyan('-g')})`
     );
     return;
   }
 
-  // Only install to .agents/skills/ (universal agents)
-  const universalAgentNames = getUniversalAgents();
+  // Install to all known agents
+  const allAgentNames = Object.keys(agents) as Array<keyof typeof agents>;
 
-  // Separate node_modules skills from remote skills
+  // Separate node_modules subagents from remote subagents
   const nodeModuleSkills: string[] = [];
   const bySource = new Map<string, { sourceType: string; skills: string[] }>();
 
@@ -55,16 +55,16 @@ export async function runInstallFromLock(args: string[]): Promise<void> {
   const remoteCount = skillEntries.length - nodeModuleSkills.length;
   if (remoteCount > 0) {
     p.log.info(
-      `Restoring ${pc.cyan(String(remoteCount))} skill${remoteCount !== 1 ? 's' : ''} from skills-lock.json into ${pc.dim('.agents/skills/')}`
+      `Restoring ${pc.cyan(String(remoteCount))} subagent${remoteCount !== 1 ? 's' : ''} from subagents-lock.json into ${pc.dim('.agents/agents/')}`
     );
   }
 
-  // Install remote skills grouped by source
+  // Install remote subagents grouped by source
   for (const [source, { skills }] of bySource) {
     try {
       await runAdd([source], {
         skill: skills,
-        agent: universalAgentNames,
+        agent: allAgentNames,
         yes: true,
       });
     } catch (error) {
@@ -74,17 +74,17 @@ export async function runInstallFromLock(args: string[]): Promise<void> {
     }
   }
 
-  // Handle node_modules skills via sync
+  // Handle node_modules subagents via sync
   if (nodeModuleSkills.length > 0) {
     p.log.info(
-      `${pc.cyan(String(nodeModuleSkills.length))} skill${nodeModuleSkills.length !== 1 ? 's' : ''} from node_modules`
+      `${pc.cyan(String(nodeModuleSkills.length))} subagent${nodeModuleSkills.length !== 1 ? 's' : ''} from node_modules`
     );
     try {
       const { options: syncOptions } = parseSyncOptions(args);
-      await runSync(args, { ...syncOptions, yes: true, agent: universalAgentNames });
+      await runSync(args, { ...syncOptions, yes: true, agent: allAgentNames });
     } catch (error) {
       p.log.error(
-        `Failed to sync node_modules skills: ${error instanceof Error ? error.message : 'Unknown error'}`
+        `Failed to sync node_modules subagents: ${error instanceof Error ? error.message : 'Unknown error'}`
       );
     }
   }

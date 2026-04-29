@@ -7,20 +7,20 @@ import {
   writeLocalLock,
   addSkillToLocalLock,
   removeSkillFromLocalLock,
-  computeSkillFolderHash,
+  computeSubagentFileHash,
   getLocalLockPath,
 } from '../src/local-lock.ts';
 
 describe('local-lock', () => {
   describe('getLocalLockPath', () => {
-    it('returns skills-lock.json in given directory', () => {
+    it('returns subagents-lock.json in given directory', () => {
       const result = getLocalLockPath('/some/project');
-      expect(result).toBe(join('/some/project', 'skills-lock.json'));
+      expect(result).toBe(join('/some/project', 'subagents-lock.json'));
     });
 
     it('uses cwd when no directory given', () => {
       const result = getLocalLockPath();
-      expect(result).toBe(join(process.cwd(), 'skills-lock.json'));
+      expect(result).toBe(join(process.cwd(), 'subagents-lock.json'));
     });
   });
 
@@ -29,7 +29,7 @@ describe('local-lock', () => {
       const dir = await mkdtemp(join(tmpdir(), 'lock-test-'));
       try {
         const lock = await readLocalLock(dir);
-        expect(lock).toEqual({ version: 1, skills: {} });
+        expect(lock).toEqual({ version: 1, subagents: {} });
       } finally {
         await rm(dir, { recursive: true, force: true });
       }
@@ -40,20 +40,20 @@ describe('local-lock', () => {
       try {
         const content = {
           version: 1,
-          skills: {
-            'my-skill': {
-              source: 'vercel-labs/skills',
+          subagents: {
+            'my-agent': {
+              source: 'org/repo',
               sourceType: 'github',
               computedHash: 'abc123',
             },
           },
         };
-        await writeFile(join(dir, 'skills-lock.json'), JSON.stringify(content), 'utf-8');
+        await writeFile(join(dir, 'subagents-lock.json'), JSON.stringify(content), 'utf-8');
 
         const lock = await readLocalLock(dir);
         expect(lock.version).toBe(1);
-        expect(lock.skills['my-skill']).toEqual({
-          source: 'vercel-labs/skills',
+        expect(lock.subagents['my-agent']).toEqual({
+          source: 'org/repo',
           sourceType: 'github',
           computedHash: 'abc123',
         });
@@ -67,29 +67,29 @@ describe('local-lock', () => {
       try {
         const conflicted = `{
   "version": 1,
-  "skills": {
+  "subagents": {
 <<<<<<< HEAD
-    "skill-a": { "source": "org/repo-a", "sourceType": "github", "computedHash": "aaa" }
+    "agent-a": { "source": "org/repo-a", "sourceType": "github", "computedHash": "aaa" }
 =======
-    "skill-b": { "source": "org/repo-b", "sourceType": "github", "computedHash": "bbb" }
+    "agent-b": { "source": "org/repo-b", "sourceType": "github", "computedHash": "bbb" }
 >>>>>>> feature-branch
   }
 }`;
-        await writeFile(join(dir, 'skills-lock.json'), conflicted, 'utf-8');
+        await writeFile(join(dir, 'subagents-lock.json'), conflicted, 'utf-8');
 
         const lock = await readLocalLock(dir);
-        expect(lock).toEqual({ version: 1, skills: {} });
+        expect(lock).toEqual({ version: 1, subagents: {} });
       } finally {
         await rm(dir, { recursive: true, force: true });
       }
     });
 
-    it('returns empty lock for invalid structure (missing skills key)', async () => {
+    it('returns empty lock for invalid structure (missing subagents key)', async () => {
       const dir = await mkdtemp(join(tmpdir(), 'lock-test-'));
       try {
-        await writeFile(join(dir, 'skills-lock.json'), '{"version": 1}', 'utf-8');
+        await writeFile(join(dir, 'subagents-lock.json'), '{"version": 1}', 'utf-8');
         const lock = await readLocalLock(dir);
-        expect(lock).toEqual({ version: 1, skills: {} });
+        expect(lock).toEqual({ version: 1, subagents: {} });
       } finally {
         await rm(dir, { recursive: true, force: true });
       }
@@ -103,18 +103,18 @@ describe('local-lock', () => {
         await writeLocalLock(
           {
             version: 1,
-            skills: {
-              'zebra-skill': {
+            subagents: {
+              'zebra-agent': {
                 source: 'org/z',
                 sourceType: 'github',
                 computedHash: 'zzz',
               },
-              'alpha-skill': {
+              'alpha-agent': {
                 source: 'org/a',
                 sourceType: 'github',
                 computedHash: 'aaa',
               },
-              'middle-skill': {
+              'middle-agent': {
                 source: 'org/m',
                 sourceType: 'github',
                 computedHash: 'mmm',
@@ -124,12 +124,12 @@ describe('local-lock', () => {
           dir
         );
 
-        const raw = await readFile(join(dir, 'skills-lock.json'), 'utf-8');
+        const raw = await readFile(join(dir, 'subagents-lock.json'), 'utf-8');
         expect(raw.endsWith('\n')).toBe(true);
 
         const parsed = JSON.parse(raw);
-        const keys = Object.keys(parsed.skills);
-        expect(keys).toEqual(['alpha-skill', 'middle-skill', 'zebra-skill']);
+        const keys = Object.keys(parsed.subagents);
+        expect(keys).toEqual(['alpha-agent', 'middle-agent', 'zebra-agent']);
       } finally {
         await rm(dir, { recursive: true, force: true });
       }
@@ -137,17 +137,17 @@ describe('local-lock', () => {
   });
 
   describe('addSkillToLocalLock', () => {
-    it('adds a new skill to an empty lock', async () => {
+    it('adds a new subagent to an empty lock', async () => {
       const dir = await mkdtemp(join(tmpdir(), 'lock-test-'));
       try {
         await addSkillToLocalLock(
-          'new-skill',
+          'new-agent',
           { source: 'org/repo', sourceType: 'github', computedHash: 'hash123' },
           dir
         );
 
         const lock = await readLocalLock(dir);
-        expect(lock.skills['new-skill']).toEqual({
+        expect(lock.subagents['new-agent']).toEqual({
           source: 'org/repo',
           sourceType: 'github',
           computedHash: 'hash123',
@@ -157,45 +157,45 @@ describe('local-lock', () => {
       }
     });
 
-    it('updates an existing skill hash', async () => {
+    it('updates an existing subagent hash', async () => {
       const dir = await mkdtemp(join(tmpdir(), 'lock-test-'));
       try {
         await addSkillToLocalLock(
-          'my-skill',
+          'my-agent',
           { source: 'org/repo', sourceType: 'github', computedHash: 'old-hash' },
           dir
         );
         await addSkillToLocalLock(
-          'my-skill',
+          'my-agent',
           { source: 'org/repo', sourceType: 'github', computedHash: 'new-hash' },
           dir
         );
 
         const lock = await readLocalLock(dir);
-        expect(lock.skills['my-skill']!.computedHash).toBe('new-hash');
+        expect(lock.subagents['my-agent']!.computedHash).toBe('new-hash');
       } finally {
         await rm(dir, { recursive: true, force: true });
       }
     });
 
-    it('preserves other skills when adding', async () => {
+    it('preserves other subagents when adding', async () => {
       const dir = await mkdtemp(join(tmpdir(), 'lock-test-'));
       try {
         await addSkillToLocalLock(
-          'skill-a',
+          'agent-a',
           { source: 'org/a', sourceType: 'github', computedHash: 'aaa' },
           dir
         );
         await addSkillToLocalLock(
-          'skill-b',
+          'agent-b',
           { source: 'org/b', sourceType: 'github', computedHash: 'bbb' },
           dir
         );
 
         const lock = await readLocalLock(dir);
-        expect(Object.keys(lock.skills)).toHaveLength(2);
-        expect(lock.skills['skill-a']!.computedHash).toBe('aaa');
-        expect(lock.skills['skill-b']!.computedHash).toBe('bbb');
+        expect(Object.keys(lock.subagents)).toHaveLength(2);
+        expect(lock.subagents['agent-a']!.computedHash).toBe('aaa');
+        expect(lock.subagents['agent-b']!.computedHash).toBe('bbb');
       } finally {
         await rm(dir, { recursive: true, force: true });
       }
@@ -205,7 +205,7 @@ describe('local-lock', () => {
       const dir = await mkdtemp(join(tmpdir(), 'lock-test-'));
       try {
         await addSkillToLocalLock(
-          'branch-skill',
+          'branch-agent',
           {
             source: 'org/repo',
             ref: 'feature/install',
@@ -216,7 +216,7 @@ describe('local-lock', () => {
         );
 
         const lock = await readLocalLock(dir);
-        expect(lock.skills['branch-skill']).toEqual({
+        expect(lock.subagents['branch-agent']).toEqual({
           source: 'org/repo',
           ref: 'feature/install',
           sourceType: 'github',
@@ -229,29 +229,29 @@ describe('local-lock', () => {
   });
 
   describe('removeSkillFromLocalLock', () => {
-    it('removes an existing skill', async () => {
+    it('removes an existing subagent', async () => {
       const dir = await mkdtemp(join(tmpdir(), 'lock-test-'));
       try {
         await addSkillToLocalLock(
-          'my-skill',
+          'my-agent',
           { source: 'org/repo', sourceType: 'github', computedHash: 'hash' },
           dir
         );
 
-        const removed = await removeSkillFromLocalLock('my-skill', dir);
+        const removed = await removeSkillFromLocalLock('my-agent', dir);
         expect(removed).toBe(true);
 
         const lock = await readLocalLock(dir);
-        expect(lock.skills['my-skill']).toBeUndefined();
+        expect(lock.subagents['my-agent']).toBeUndefined();
       } finally {
         await rm(dir, { recursive: true, force: true });
       }
     });
 
-    it('returns false for non-existent skill', async () => {
+    it('returns false for non-existent subagent', async () => {
       const dir = await mkdtemp(join(tmpdir(), 'lock-test-'));
       try {
-        const removed = await removeSkillFromLocalLock('no-such-skill', dir);
+        const removed = await removeSkillFromLocalLock('no-such-agent', dir);
         expect(removed).toBe(false);
       } finally {
         await rm(dir, { recursive: true, force: true });
@@ -259,20 +259,15 @@ describe('local-lock', () => {
     });
   });
 
-  describe('computeSkillFolderHash', () => {
+  describe('computeSubagentFileHash', () => {
     it('produces a deterministic SHA-256 hash', async () => {
       const dir = await mkdtemp(join(tmpdir(), 'lock-test-'));
       try {
-        const skillDir = join(dir, 'my-skill');
-        await mkdir(skillDir, { recursive: true });
-        await writeFile(
-          join(skillDir, 'SKILL.md'),
-          '---\nname: test\ndescription: test\n---\n# Test\n',
-          'utf-8'
-        );
+        const filePath = join(dir, 'my-agent.md');
+        await writeFile(filePath, '---\nname: test\ndescription: test\n---\n# Test\n', 'utf-8');
 
-        const hash1 = await computeSkillFolderHash(skillDir);
-        const hash2 = await computeSkillFolderHash(skillDir);
+        const hash1 = await computeSubagentFileHash(filePath);
+        const hash2 = await computeSubagentFileHash(filePath);
         expect(hash1).toBe(hash2);
         expect(hash1).toMatch(/^[a-f0-9]{64}$/);
       } finally {
@@ -283,95 +278,15 @@ describe('local-lock', () => {
     it('changes when file content changes', async () => {
       const dir = await mkdtemp(join(tmpdir(), 'lock-test-'));
       try {
-        const skillDir = join(dir, 'my-skill');
-        await mkdir(skillDir, { recursive: true });
-        await writeFile(join(skillDir, 'SKILL.md'), 'version 1', 'utf-8');
+        const filePath = join(dir, 'my-agent.md');
+        await writeFile(filePath, 'version 1', 'utf-8');
 
-        const hash1 = await computeSkillFolderHash(skillDir);
+        const hash1 = await computeSubagentFileHash(filePath);
 
-        await writeFile(join(skillDir, 'SKILL.md'), 'version 2', 'utf-8');
+        await writeFile(filePath, 'version 2', 'utf-8');
 
-        const hash2 = await computeSkillFolderHash(skillDir);
+        const hash2 = await computeSubagentFileHash(filePath);
         expect(hash1).not.toBe(hash2);
-      } finally {
-        await rm(dir, { recursive: true, force: true });
-      }
-    });
-
-    it('changes when a file is added', async () => {
-      const dir = await mkdtemp(join(tmpdir(), 'lock-test-'));
-      try {
-        const skillDir = join(dir, 'my-skill');
-        await mkdir(skillDir, { recursive: true });
-        await writeFile(join(skillDir, 'SKILL.md'), 'content', 'utf-8');
-
-        const hash1 = await computeSkillFolderHash(skillDir);
-
-        await writeFile(join(skillDir, 'extra.txt'), 'extra file', 'utf-8');
-
-        const hash2 = await computeSkillFolderHash(skillDir);
-        expect(hash1).not.toBe(hash2);
-      } finally {
-        await rm(dir, { recursive: true, force: true });
-      }
-    });
-
-    it('changes when a file is renamed', async () => {
-      const dir = await mkdtemp(join(tmpdir(), 'lock-test-'));
-      try {
-        const skillDir1 = join(dir, 'skill-v1');
-        await mkdir(skillDir1, { recursive: true });
-        await writeFile(join(skillDir1, 'old-name.md'), 'content', 'utf-8');
-
-        const skillDir2 = join(dir, 'skill-v2');
-        await mkdir(skillDir2, { recursive: true });
-        await writeFile(join(skillDir2, 'new-name.md'), 'content', 'utf-8');
-
-        const hash1 = await computeSkillFolderHash(skillDir1);
-        const hash2 = await computeSkillFolderHash(skillDir2);
-        expect(hash1).not.toBe(hash2);
-      } finally {
-        await rm(dir, { recursive: true, force: true });
-      }
-    });
-
-    it('includes nested files in subdirectories', async () => {
-      const dir = await mkdtemp(join(tmpdir(), 'lock-test-'));
-      try {
-        const skillDir = join(dir, 'my-skill');
-        await mkdir(join(skillDir, 'sub'), { recursive: true });
-        await writeFile(join(skillDir, 'SKILL.md'), 'root', 'utf-8');
-        await writeFile(join(skillDir, 'sub', 'helper.md'), 'nested', 'utf-8');
-
-        const hash1 = await computeSkillFolderHash(skillDir);
-
-        // Changing nested file should change hash
-        await writeFile(join(skillDir, 'sub', 'helper.md'), 'changed', 'utf-8');
-
-        const hash2 = await computeSkillFolderHash(skillDir);
-        expect(hash1).not.toBe(hash2);
-      } finally {
-        await rm(dir, { recursive: true, force: true });
-      }
-    });
-
-    it('ignores .git and node_modules directories', async () => {
-      const dir = await mkdtemp(join(tmpdir(), 'lock-test-'));
-      try {
-        const skillDir = join(dir, 'my-skill');
-        await mkdir(skillDir, { recursive: true });
-        await writeFile(join(skillDir, 'SKILL.md'), 'content', 'utf-8');
-
-        const hash1 = await computeSkillFolderHash(skillDir);
-
-        // Adding files in .git and node_modules should NOT change hash
-        await mkdir(join(skillDir, '.git'), { recursive: true });
-        await writeFile(join(skillDir, '.git', 'HEAD'), 'ref: refs/heads/main', 'utf-8');
-        await mkdir(join(skillDir, 'node_modules', 'foo'), { recursive: true });
-        await writeFile(join(skillDir, 'node_modules', 'foo', 'index.js'), 'noop', 'utf-8');
-
-        const hash2 = await computeSkillFolderHash(skillDir);
-        expect(hash1).toBe(hash2);
       } finally {
         await rm(dir, { recursive: true, force: true });
       }
@@ -379,39 +294,70 @@ describe('local-lock', () => {
   });
 
   describe('merge conflict friendliness', () => {
-    it('produces no-conflict output when two skills are added independently', async () => {
+    it('should sort subagents alphabetically in lock file', async () => {
       const dir = await mkdtemp(join(tmpdir(), 'lock-test-'));
       try {
-        // Simulate branch A adding skill-a
         await addSkillToLocalLock(
-          'skill-a',
+          'agent-a',
           { source: 'org/a', sourceType: 'github', computedHash: 'aaa' },
           dir
         );
-        const branchA = await readFile(join(dir, 'skills-lock.json'), 'utf-8');
 
-        // Reset to empty
-        await writeFile(join(dir, 'skills-lock.json'), '{"version":1,"skills":{}}', 'utf-8');
+        const raw = await readFile(join(dir, 'subagents-lock.json'), 'utf-8');
+        const parsed = JSON.parse(raw);
+        const keys = Object.keys(parsed.subagents);
+        expect(keys).toEqual([...keys].sort());
+      } finally {
+        await rm(dir, { recursive: true, force: true });
+      }
+    });
 
-        // Simulate branch B adding skill-b
+    it('should not have timestamps in lock entries', async () => {
+      const dir = await mkdtemp(join(tmpdir(), 'lock-test-'));
+      try {
         await addSkillToLocalLock(
-          'skill-b',
+          'agent-a',
+          { source: 'org/a', sourceType: 'github', computedHash: 'aaa' },
+          dir
+        );
+
+        const raw = await readFile(join(dir, 'subagents-lock.json'), 'utf-8');
+        const parsed = JSON.parse(raw);
+        expect(parsed.subagents['agent-a'].installedAt).toBeUndefined();
+        expect(parsed.subagents['agent-a'].updatedAt).toBeUndefined();
+      } finally {
+        await rm(dir, { recursive: true, force: true });
+      }
+    });
+
+    it('produces no-conflict output when two subagents are added independently', async () => {
+      const dir = await mkdtemp(join(tmpdir(), 'lock-test-'));
+      try {
+        await addSkillToLocalLock(
+          'agent-a',
+          { source: 'org/a', sourceType: 'github', computedHash: 'aaa' },
+          dir
+        );
+        const branchA = await readFile(join(dir, 'subagents-lock.json'), 'utf-8');
+
+        await writeFile(join(dir, 'subagents-lock.json'), '{"version":1,"subagents":{}}', 'utf-8');
+
+        await addSkillToLocalLock(
+          'agent-b',
           { source: 'org/b', sourceType: 'github', computedHash: 'bbb' },
           dir
         );
-        const branchB = await readFile(join(dir, 'skills-lock.json'), 'utf-8');
+        const branchB = await readFile(join(dir, 'subagents-lock.json'), 'utf-8');
 
-        // Both branches produce valid JSON with no timestamps to conflict on
         const parsedA = JSON.parse(branchA);
         const parsedB = JSON.parse(branchB);
-        expect(parsedA.skills['skill-a']).toBeDefined();
-        expect(parsedA.skills['skill-a'].computedHash).toBeDefined();
-        expect(parsedB.skills['skill-b']).toBeDefined();
-        expect(parsedB.skills['skill-b'].computedHash).toBeDefined();
+        expect(parsedA.subagents['agent-a']).toBeDefined();
+        expect(parsedA.subagents['agent-a'].computedHash).toBeDefined();
+        expect(parsedB.subagents['agent-b']).toBeDefined();
+        expect(parsedB.subagents['agent-b'].computedHash).toBeDefined();
 
-        // No timestamps present
-        expect(parsedA.skills['skill-a'].installedAt).toBeUndefined();
-        expect(parsedA.skills['skill-a'].updatedAt).toBeUndefined();
+        expect(parsedA.subagents['agent-a'].installedAt).toBeUndefined();
+        expect(parsedA.subagents['agent-a'].updatedAt).toBeUndefined();
       } finally {
         await rm(dir, { recursive: true, force: true });
       }

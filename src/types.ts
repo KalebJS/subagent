@@ -1,79 +1,23 @@
-export type AgentType =
-  | 'aider-desk'
-  | 'amp'
-  | 'antigravity'
-  | 'augment'
-  | 'bob'
-  | 'claude-code'
-  | 'openclaw'
-  | 'cline'
-  | 'codearts-agent'
-  | 'codebuddy'
-  | 'codemaker'
-  | 'codestudio'
-  | 'codex'
-  | 'command-code'
-  | 'continue'
-  | 'cortex'
-  | 'crush'
-  | 'cursor'
-  | 'deepagents'
-  | 'devin'
-  | 'dexto'
-  | 'droid'
-  | 'firebender'
-  | 'forgecode'
-  | 'gemini-cli'
-  | 'github-copilot'
-  | 'goose'
-  | 'iflow-cli'
-  | 'junie'
-  | 'kilo'
-  | 'kimi-cli'
-  | 'kiro-cli'
-  | 'kode'
-  | 'mcpjam'
-  | 'mistral-vibe'
-  | 'mux'
-  | 'neovate'
-  | 'opencode'
-  | 'openhands'
-  | 'pi'
-  | 'qoder'
-  | 'qwen-code'
-  | 'replit'
-  | 'roo'
-  | 'rovodev'
-  | 'tabnine-cli'
-  | 'trae'
-  | 'trae-cn'
-  | 'warp'
-  | 'windsurf'
-  | 'zencoder'
-  | 'pochi'
-  | 'adal'
-  | 'universal';
+export type AgentType = 'amp' | 'claude-code' | 'codex' | 'cursor' | 'factory' | 'opencode';
 
-export interface Skill {
+export interface Subagent {
   name: string;
   description: string;
-  path: string;
-  /** Raw SKILL.md content for hashing */
+  /** Full path to the .md file */
+  filePath: string;
+  /** Raw .md content for hashing */
   rawContent?: string;
-  /** Name of the plugin this skill belongs to (if any) */
-  pluginName?: string;
   metadata?: Record<string, unknown>;
 }
 
 export interface AgentConfig {
   name: string;
   displayName: string;
-  skillsDir: string;
-  /** Global skills directory. Set to undefined if the agent doesn't support global installation. */
-  globalSkillsDir: string | undefined;
+  /** Relative project-level agents directory (e.g. ".claude/agents") */
+  agentsDir: string;
+  /** Absolute global agents directory. Undefined if agent doesn't support global install. */
+  globalAgentsDir: string | undefined;
   detectInstalled: () => Promise<boolean>;
-  /** Whether to show this agent in the universal agents list. Defaults to true. */
-  showInUniversalList?: boolean;
 }
 
 export interface ParsedSource {
@@ -82,25 +26,25 @@ export interface ParsedSource {
   subpath?: string;
   localPath?: string;
   ref?: string;
-  /** Skill name extracted from @skill syntax (e.g., owner/repo@skill-name) */
-  skillFilter?: string;
+  /** Subagent name extracted from @agent syntax (e.g., owner/repo@agent-name) */
+  agentFilter?: string;
 }
 
 /**
- * Represents a skill fetched from a remote host provider.
+ * Represents a subagent fetched from a remote host provider.
  */
-export interface RemoteSkill {
-  /** Display name of the skill (from frontmatter) */
+export interface RemoteSubagent {
+  /** Display name of the subagent (from frontmatter) */
   name: string;
-  /** Description of the skill (from frontmatter) */
+  /** Description of the subagent (from frontmatter) */
   description: string;
   /** Full markdown content including frontmatter */
   content: string;
-  /** The identifier used for installation directory name */
+  /** The identifier used for installation filename */
   installName: string;
   /** The original source URL */
   sourceUrl: string;
-  /** The provider that fetched this skill */
+  /** The provider that fetched this subagent */
   providerId: string;
   /** Source identifier for telemetry (e.g., "mintlify.com") */
   sourceIdentifier: string;

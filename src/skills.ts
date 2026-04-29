@@ -2,7 +2,10 @@ import { readdir, readFile, stat } from 'fs/promises';
 import { join, basename, dirname, resolve, normalize, sep } from 'path';
 import { parseFrontmatter } from './frontmatter.ts';
 import { sanitizeMetadata } from './sanitize.ts';
-import type { Skill } from './types.ts';
+import type { Subagent } from './types.ts';
+
+/** @deprecated Use Subagent instead */
+export type Skill = Subagent;
 import { getPluginSkillPaths, getPluginGroupings } from './plugin-manifest.ts';
 
 const SKIP_DIRS = ['node_modules', '.git', 'dist', 'build', '__pycache__'];
@@ -46,7 +49,11 @@ export async function parseSkillMd(
     // Skip internal skills unless:
     // 1. INSTALL_INTERNAL_SKILLS=1 is set, OR
     // 2. includeInternal option is true (e.g., when user explicitly requests a skill)
-    const isInternal = data.metadata?.internal === true;
+    const metadata =
+      typeof data.metadata === 'object' && data.metadata !== null
+        ? (data.metadata as Record<string, unknown>)
+        : undefined;
+    const isInternal = metadata?.internal === true;
     if (isInternal && !shouldInstallInternalSkills() && !options?.includeInternal) {
       return null;
     }

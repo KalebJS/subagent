@@ -3,17 +3,12 @@ import pc from 'picocolors';
 import { readdir, stat } from 'fs/promises';
 import { join, sep } from 'path';
 import { homedir } from 'os';
-import { parseSkillMd } from './skills.ts';
-import { installSkillForAgent, getCanonicalPath } from './installer.ts';
-import {
-  detectInstalledAgents,
-  agents,
-  getUniversalAgents,
-  getNonUniversalAgents,
-} from './agents.ts';
+import { parseSubagentMd } from './subagents.ts';
+import { installSubagentForAgent, getCanonicalPath } from './installer.ts';
+import { detectInstalledAgents, agents } from './agents.ts';
 import { searchMultiselect } from './prompts/search-multiselect.ts';
-import { addSkillToLocalLock, computeSkillFolderHash, readLocalLock } from './local-lock.ts';
-import type { Skill, AgentType } from './types.ts';
+import { addSkillToLocalLock, computeSubagentFileHash, readLocalLock } from './local-lock.ts';
+import type { Subagent, AgentType } from './types.ts';
 import { track } from './telemetry.ts';
 
 const isCancelled = (value: unknown): value is symbol => typeof value === 'symbol';
@@ -45,42 +40,40 @@ function shortenPath(fullPath: string, cwd: string): string {
  */
 async function discoverNodeModuleSkills(
   cwd: string
-): Promise<Array<Skill & { packageName: string }>> {
+): Promise<Array<Subagent & { packageName: string }>> {
   const nodeModulesDir = join(cwd, 'node_modules');
-  const skills: Array<Skill & { packageName: string }> = [];
+  const subagents: Array<Subagent & { packageName: string }> = [];
 
   let topNames: string[];
   try {
     topNames = await readdir(nodeModulesDir);
   } catch {
-    return skills;
+    return subagents;
   }
 
   const processPackageDir = async (pkgDir: string, packageName: string) => {
-    // Check for SKILL.md at package root
-    const rootSkill = await parseSkillMd(join(pkgDir, 'SKILL.md'));
-    if (rootSkill) {
-      skills.push({ ...rootSkill, packageName });
-      return;
-    }
-
-    // Check common skill locations within the package
-    const searchDirs = [pkgDir, join(pkgDir, 'skills'), join(pkgDir, '.agents', 'skills')];
+    // Check for .md files at package root with frontmatter
+    const searchDirs = [
+      pkgDir,
+      join(pkgDir, 'agents'),
+      join(pkgDir, 'subagents'),
+      join(pkgDir, '.agents', 'agents'),
+    ];
 
     for (const searchDir of searchDirs) {
       try {
         const entries = await readdir(searchDir);
         for (const name of entries) {
-          const skillDir = join(searchDir, name);
+          const filePath = join(searchDir, name);
           try {
-            const s = await stat(skillDir);
-            if (!s.isDirectory()) continue;
+            const s = await stat(filePath);
+            if (!s.isFile() || !name.endsWith('.md')) continue;
           } catch {
             continue;
           }
-          const skill = await parseSkillMd(join(skillDir, 'SKILL.md'));
-          if (skill) {
-            skills.push({ ...skill, packageName });
+          const agent = await parseSubagentMd(filePath);
+          if (agent) {
+            subagents.push({ ...agent, packageName });
           }
         }
       } catch {
@@ -126,80 +119,78 @@ async function discoverNodeModuleSkills(
     })
   );
 
-  return skills;
+  return subagents;
 }
 
 export async function runSync(args: string[], options: SyncOptions = {}): Promise<void> {
   const cwd = process.cwd();
 
   console.log();
-  p.intro(pc.bgCyan(pc.black(' skills experimental_sync ')));
+  p.intro(pc.bgCyan(pc.black(' subagents experimental_sync ')));
 
   const spinner = p.spinner();
 
-  // 1. Discover skills from node_modules
-  spinner.start('Scanning node_modules for skills...');
+  // 1. Discover subagents from node_modules
+  spinner.start('Scanning node_modules for subagents...');
   const discoveredSkills = await discoverNodeModuleSkills(cwd);
 
   if (discoveredSkills.length === 0) {
-    spinner.stop(pc.yellow('No skills found'));
-    p.outro(pc.dim('No SKILL.md files found in node_modules.'));
+    spinner.stop(pc.yellow('No subagents found'));
+    p.outro(pc.dim('No .md subagent files found in node_modules.'));
     return;
   }
 
   spinner.stop(
-    `Found ${pc.green(String(discoveredSkills.length))} skill${discoveredSkills.length > 1 ? 's' : ''} in node_modules`
+    `Found ${pc.green(String(discoveredSkills.length))} subagent${discoveredSkills.length > 1 ? 's' : ''} in node_modules`
   );
 
-  // Show discovered skills
-  for (const skill of discoveredSkills) {
-    p.log.info(`${pc.cyan(skill.name)} ${pc.dim(`from ${skill.packageName}`)}`);
-    if (skill.description) {
-      p.log.message(pc.dim(`  ${skill.description}`));
+  // Show discovered subagents
+  for (const agent of discoveredSkills) {
+    p.log.info(`${pc.cyan(agent.name)} ${pc.dim(`from ${agent.packageName}`)}`);
+    if (agent.description) {
+      p.log.message(pc.dim(`  ${agent.description}`));
     }
   }
 
-  // 2. Check which skills are already up-to-date via local lock
+  // 2. Check which subagents are already up-to-date via local lock
   const localLock = await readLocalLock(cwd);
-  const toInstall: Array<Skill & { packageName: string }> = [];
+  const toInstall: Array<Subagent & { packageName: string }> = [];
   const upToDate: string[] = [];
 
   if (options.force) {
     toInstall.push(...discoveredSkills);
-    p.log.info(pc.dim('Force mode: reinstalling all skills'));
+    p.log.info(pc.dim('Force mode: reinstalling all subagents'));
   } else {
-    for (const skill of discoveredSkills) {
-      const existingEntry = localLock.skills[skill.name];
+    for (const agent of discoveredSkills) {
+      const existingEntry = localLock.subagents[agent.name];
       if (existingEntry) {
-        // Compute current hash and compare
-        const currentHash = await computeSkillFolderHash(skill.path);
+        const currentHash = await computeSubagentFileHash(agent.filePath);
         if (currentHash === existingEntry.computedHash) {
-          upToDate.push(skill.name);
+          upToDate.push(agent.name);
           continue;
         }
       }
-      toInstall.push(skill);
+      toInstall.push(agent);
     }
 
     if (upToDate.length > 0) {
       p.log.info(
-        pc.dim(`${upToDate.length} skill${upToDate.length !== 1 ? 's' : ''} already up to date`)
+        pc.dim(`${upToDate.length} subagent${upToDate.length !== 1 ? 's' : ''} already up to date`)
       );
     }
 
     if (toInstall.length === 0) {
       console.log();
-      p.outro(pc.green('All skills are up to date.'));
+      p.outro(pc.green('All subagents are up to date.'));
       return;
     }
   }
 
-  p.log.info(`${toInstall.length} skill${toInstall.length !== 1 ? 's' : ''} to install/update`);
+  p.log.info(`${toInstall.length} subagent${toInstall.length !== 1 ? 's' : ''} to install/update`);
 
   // 3. Select agents
   let targetAgents: AgentType[];
   const validAgents = Object.keys(agents);
-  const universalAgents = getUniversalAgents();
 
   if (options.agent?.includes('*')) {
     targetAgents = validAgents as AgentType[];
@@ -220,28 +211,19 @@ export async function runSync(args: string[], options: SyncOptions = {}): Promis
 
     if (installedAgents.length === 0) {
       if (options.yes) {
-        targetAgents = universalAgents;
-        p.log.info('Installing to universal agents');
+        targetAgents = validAgents as AgentType[];
+        p.log.info('Installing to all agents');
       } else {
-        const otherAgents = getNonUniversalAgents();
-
-        const otherChoices = otherAgents.map((a) => ({
+        const allAgentChoices = (Object.keys(agents) as AgentType[]).map((a) => ({
           value: a,
           label: agents[a].displayName,
-          hint: agents[a].skillsDir,
+          hint: agents[a].agentsDir,
         }));
 
         const selected = await searchMultiselect({
           message: 'Which agents do you want to install to?',
-          items: otherChoices,
+          items: allAgentChoices,
           initialSelected: [],
-          lockedSection: {
-            title: 'Universal (.agents/skills)',
-            items: universalAgents.map((a) => ({
-              value: a,
-              label: agents[a].displayName,
-            })),
-          },
         });
 
         if (isCancelled(selected)) {
@@ -252,33 +234,18 @@ export async function runSync(args: string[], options: SyncOptions = {}): Promis
         targetAgents = selected as AgentType[];
       }
     } else if (installedAgents.length === 1 || options.yes) {
-      // Ensure universal agents are included
       targetAgents = [...installedAgents];
-      for (const ua of universalAgents) {
-        if (!targetAgents.includes(ua)) {
-          targetAgents.push(ua);
-        }
-      }
     } else {
-      const otherAgents = getNonUniversalAgents().filter((a) => installedAgents.includes(a));
-
-      const otherChoices = otherAgents.map((a) => ({
+      const otherChoices = installedAgents.map((a) => ({
         value: a,
         label: agents[a].displayName,
-        hint: agents[a].skillsDir,
+        hint: agents[a].agentsDir,
       }));
 
       const selected = await searchMultiselect({
         message: 'Which agents do you want to install to?',
         items: otherChoices,
-        initialSelected: installedAgents.filter((a) => !universalAgents.includes(a)),
-        lockedSection: {
-          title: 'Universal (.agents/skills)',
-          items: universalAgents.map((a) => ({
-            value: a,
-            label: agents[a].displayName,
-          })),
-        },
+        initialSelected: installedAgents,
       });
 
       if (isCancelled(selected)) {
@@ -311,8 +278,8 @@ export async function runSync(args: string[], options: SyncOptions = {}): Promis
     }
   }
 
-  // 5. Install skills (always project-scoped, always symlink)
-  spinner.start('Syncing skills...');
+  // 5. Install subagents (always project-scoped, always copy)
+  spinner.start('Syncing subagents...');
 
   const results: Array<{
     skill: string;
@@ -326,10 +293,10 @@ export async function runSync(args: string[], options: SyncOptions = {}): Promis
 
   for (const skill of toInstall) {
     for (const agent of targetAgents) {
-      const result = await installSkillForAgent(skill, agent, {
+      const result = await installSubagentForAgent(skill, agent, {
         global: false,
         cwd,
-        mode: 'symlink',
+        mode: 'copy',
       });
       results.push({
         skill: skill.name,
@@ -353,7 +320,7 @@ export async function runSync(args: string[], options: SyncOptions = {}): Promis
   for (const skill of toInstall) {
     if (successfulSkillNames.has(skill.name)) {
       try {
-        const computedHash = await computeSkillFolderHash(skill.path);
+        const computedHash = await computeSubagentFileHash(skill.filePath);
         await addSkillToLocalLock(
           skill.name,
           {
@@ -394,7 +361,7 @@ export async function runSync(args: string[], options: SyncOptions = {}): Promis
     }
 
     const skillCount = bySkill.size;
-    const title = pc.green(`Synced ${skillCount} skill${skillCount !== 1 ? 's' : ''}`);
+    const title = pc.green(`Synced ${skillCount} subagent${skillCount !== 1 ? 's' : ''}`);
     p.note(resultLines.join('\n'), title);
   }
 
@@ -416,7 +383,8 @@ export async function runSync(args: string[], options: SyncOptions = {}): Promis
 
   console.log();
   p.outro(
-    pc.green('Done!') + pc.dim('  Review skills before use; they run with full agent permissions.')
+    pc.green('Done!') +
+      pc.dim('  Review subagents before use; they run with full agent permissions.')
   );
 }
 

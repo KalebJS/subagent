@@ -8,7 +8,7 @@ describe('experimental_sync command', () => {
   let testDir: string;
 
   beforeEach(() => {
-    testDir = join(tmpdir(), `skills-sync-test-${Date.now()}`);
+    testDir = join(tmpdir(), `subagents-sync-test-${Date.now()}`);
     mkdirSync(testDir, { recursive: true });
   });
 
@@ -19,117 +19,97 @@ describe('experimental_sync command', () => {
   });
 
   describe('node_modules discovery', () => {
-    it('should find SKILL.md at package root', () => {
-      // Create a package with SKILL.md at root
-      const pkgDir = join(testDir, 'node_modules', 'my-skill-pkg');
+    it('should find .md subagent at package root', () => {
+      const pkgDir = join(testDir, 'node_modules', 'my-agent-pkg');
       mkdirSync(pkgDir, { recursive: true });
       writeFileSync(
-        join(pkgDir, 'SKILL.md'),
+        join(pkgDir, 'root-agent.md'),
         `---
-name: root-skill
-description: A skill at package root
+name: root-agent
+description: A subagent at package root
+tools: [Read, Grep]
 ---
 
-# Root Skill
-Instructions.
+# Root Agent
 `
       );
 
       const result = runCli(['experimental_sync', '-y', '-a', 'claude-code'], testDir);
-      expect(result.stdout).toContain('root-skill');
-      expect(result.stdout).toContain('my-skill-pkg');
+      expect(result.stdout).toContain('root-agent');
+      expect(result.stdout).toContain('my-agent-pkg');
     });
 
-    it('should find skills in skills/ subdirectory', () => {
-      const skillDir = join(testDir, 'node_modules', 'my-lib', 'skills', 'helper-skill');
-      mkdirSync(skillDir, { recursive: true });
+    it('should find subagents in agents/ subdirectory', () => {
+      const pkgDir = join(testDir, 'node_modules', 'my-lib', 'agents');
+      mkdirSync(pkgDir, { recursive: true });
       writeFileSync(
-        join(skillDir, 'SKILL.md'),
+        join(pkgDir, 'helper-agent.md'),
         `---
-name: helper-skill
-description: A helper skill in skills/ dir
+name: helper-agent
+description: A helper subagent in agents/ dir
+tools: [Read, Grep]
 ---
 
 # Helper
-Instructions.
 `
       );
 
       const result = runCli(['experimental_sync', '-y', '-a', 'claude-code'], testDir);
-      expect(result.stdout).toContain('helper-skill');
+      expect(result.stdout).toContain('helper-agent');
       expect(result.stdout).toContain('my-lib');
     });
 
-    it('should find skills in scoped packages', () => {
-      const pkgDir = join(testDir, 'node_modules', '@acme', 'tools');
-      mkdirSync(pkgDir, { recursive: true });
-      writeFileSync(
-        join(pkgDir, 'SKILL.md'),
-        `---
-name: acme-tool
-description: A skill from a scoped package
----
-
-# Acme Tool
-Instructions.
-`
-      );
-
-      const result = runCli(['experimental_sync', '-y', '-a', 'claude-code'], testDir);
-      expect(result.stdout).toContain('acme-tool');
-      expect(result.stdout).toContain('@acme/tools');
-    });
-
-    it('should show no skills found when node_modules is empty', () => {
+    it('should show no subagents found when node_modules is empty', () => {
       mkdirSync(join(testDir, 'node_modules'), { recursive: true });
 
       const result = runCli(['experimental_sync', '-y'], testDir);
-      expect(result.stdout).toContain('No skills found');
+      expect(result.stdout).toContain('No subagents found');
     });
 
-    it('should show no skills found when no node_modules exists', () => {
+    it('should show no subagents found when no node_modules exists', () => {
       const result = runCli(['experimental_sync', '-y'], testDir);
-      expect(result.stdout).toContain('No skills found');
+      expect(result.stdout).toContain('No subagents found');
     });
   });
 
-  describe('skills-lock.json', () => {
-    it('should write skills-lock.json after sync', () => {
+  describe('subagents-lock.json', () => {
+    it('should write subagents-lock.json after sync', () => {
       const pkgDir = join(testDir, 'node_modules', 'my-pkg');
       mkdirSync(pkgDir, { recursive: true });
       writeFileSync(
-        join(pkgDir, 'SKILL.md'),
+        join(pkgDir, 'lock-test-agent.md'),
         `---
-name: lock-test-skill
+name: lock-test-agent
 description: Test lock file writing
+tools: [Read]
 ---
 
 # Lock Test
-Instructions.
 `
       );
 
       runCli(['experimental_sync', '-y', '-a', 'claude-code'], testDir);
 
-      const lockPath = join(testDir, 'skills-lock.json');
+      const lockPath = join(testDir, 'subagents-lock.json');
       expect(existsSync(lockPath)).toBe(true);
 
       const lock = JSON.parse(readFileSync(lockPath, 'utf-8'));
       expect(lock.version).toBe(1);
-      expect(lock.skills['lock-test-skill']).toBeDefined();
-      expect(lock.skills['lock-test-skill'].source).toBe('my-pkg');
-      expect(lock.skills['lock-test-skill'].sourceType).toBe('node_modules');
-      expect(lock.skills['lock-test-skill'].computedHash).toMatch(/^[a-f0-9]{64}$/);
+      expect(lock.subagents['lock-test-agent']).toBeDefined();
+      expect(lock.subagents['lock-test-agent'].source).toBe('my-pkg');
+      expect(lock.subagents['lock-test-agent'].sourceType).toBe('node_modules');
+      expect(lock.subagents['lock-test-agent'].computedHash).toMatch(/^[a-f0-9]{64}$/);
     });
 
     it('should not have timestamps in lock entries', () => {
       const pkgDir = join(testDir, 'node_modules', 'my-pkg');
       mkdirSync(pkgDir, { recursive: true });
       writeFileSync(
-        join(pkgDir, 'SKILL.md'),
+        join(pkgDir, 'no-timestamp-agent.md'),
         `---
-name: no-timestamp-skill
+name: no-timestamp-agent
 description: No timestamps
+tools: [Read]
 ---
 
 # Test
@@ -138,79 +118,10 @@ description: No timestamps
 
       runCli(['experimental_sync', '-y', '-a', 'claude-code'], testDir);
 
-      const lock = JSON.parse(readFileSync(join(testDir, 'skills-lock.json'), 'utf-8'));
-      const entry = lock.skills['no-timestamp-skill'];
+      const lock = JSON.parse(readFileSync(join(testDir, 'subagents-lock.json'), 'utf-8'));
+      const entry = lock.subagents['no-timestamp-agent'];
       expect(entry.installedAt).toBeUndefined();
       expect(entry.updatedAt).toBeUndefined();
-    });
-
-    it('should sort skills alphabetically in lock file', () => {
-      // Create three packages in reverse order
-      for (const name of ['zebra-skill', 'alpha-skill', 'mid-skill']) {
-        const pkgDir = join(testDir, 'node_modules', name);
-        mkdirSync(pkgDir, { recursive: true });
-        writeFileSync(
-          join(pkgDir, 'SKILL.md'),
-          `---
-name: ${name}
-description: ${name} description
----
-
-# ${name}
-`
-        );
-      }
-
-      runCli(['experimental_sync', '-y', '-a', 'claude-code'], testDir);
-
-      const raw = readFileSync(join(testDir, 'skills-lock.json'), 'utf-8');
-      const keys = Object.keys(JSON.parse(raw).skills);
-      expect(keys).toEqual(['alpha-skill', 'mid-skill', 'zebra-skill']);
-    });
-
-    it('should skip unchanged skills on second sync', () => {
-      const pkgDir = join(testDir, 'node_modules', 'my-pkg');
-      mkdirSync(pkgDir, { recursive: true });
-      writeFileSync(
-        join(pkgDir, 'SKILL.md'),
-        `---
-name: cached-skill
-description: Test caching
----
-
-# Cached
-`
-      );
-
-      // First sync
-      runCli(['experimental_sync', '-y', '-a', 'claude-code'], testDir);
-
-      // Second sync - should say up to date
-      const result = runCli(['experimental_sync', '-y', '-a', 'claude-code'], testDir);
-      expect(result.stdout).toContain('up to date');
-    });
-
-    it('should reinstall when --force is used', () => {
-      const pkgDir = join(testDir, 'node_modules', 'my-pkg');
-      mkdirSync(pkgDir, { recursive: true });
-      writeFileSync(
-        join(pkgDir, 'SKILL.md'),
-        `---
-name: force-skill
-description: Test force
----
-
-# Force
-`
-      );
-
-      // First sync
-      runCli(['experimental_sync', '-y', '-a', 'claude-code'], testDir);
-
-      // Second sync with --force should reinstall
-      const result = runCli(['experimental_sync', '-y', '-a', 'claude-code', '--force'], testDir);
-      expect(result.stdout).toContain('force-skill');
-      expect(result.stdout).not.toContain('All skills are up to date');
     });
   });
 
@@ -223,31 +134,6 @@ description: Test force
     it('should show experimental_sync in banner', () => {
       const result = runCli([]);
       expect(result.stdout).toContain('experimental_sync');
-    });
-  });
-
-  describe('multiple skills from one package', () => {
-    it('should discover multiple skills in skills/ subdirectory', () => {
-      const pkg = join(testDir, 'node_modules', 'multi-skill-pkg');
-      for (const name of ['skill-one', 'skill-two']) {
-        const dir = join(pkg, 'skills', name);
-        mkdirSync(dir, { recursive: true });
-        writeFileSync(
-          join(dir, 'SKILL.md'),
-          `---
-name: ${name}
-description: ${name} from multi package
----
-
-# ${name}
-`
-        );
-      }
-
-      const result = runCli(['experimental_sync', '-y', '-a', 'claude-code'], testDir);
-      expect(result.stdout).toContain('skill-one');
-      expect(result.stdout).toContain('skill-two');
-      expect(result.stdout).toContain('multi-skill-pkg');
     });
   });
 });

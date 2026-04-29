@@ -22,7 +22,7 @@ function formatInstalls(count: number): string {
   return `${count} install${count === 1 ? '' : 's'}`;
 }
 
-export interface SearchSkill {
+export interface SearchSubagent {
   name: string;
   slug: string;
   source: string;
@@ -30,7 +30,7 @@ export interface SearchSkill {
 }
 
 // Search via API
-export async function searchSkillsAPI(query: string): Promise<SearchSkill[]> {
+export async function searchSubagentsAPI(query: string): Promise<SearchSubagent[]> {
   try {
     const url = `${SEARCH_API_BASE}/api/search?q=${encodeURIComponent(query)}&limit=10`;
     const res = await fetch(url);
@@ -67,8 +67,8 @@ const MOVE_UP = (n: number) => `\x1b[${n}A`;
 const MOVE_TO_COL = (n: number) => `\x1b[${n}G`;
 
 // Custom fzf-style search prompt using raw readline
-async function runSearchPrompt(initialQuery = ''): Promise<SearchSkill | null> {
-  let results: SearchSkill[] = [];
+async function runSearchPrompt(initialQuery = ''): Promise<SearchSubagent | null> {
+  let results: SearchSubagent[] = [];
   let selectedIndex = 0;
   let query = initialQuery;
   let loading = false;
@@ -102,7 +102,7 @@ async function runSearchPrompt(initialQuery = ''): Promise<SearchSkill | null> {
 
     // Search input line with cursor
     const cursor = `${BOLD}_${RESET}`;
-    lines.push(`${TEXT}Search skills:${RESET} ${query}${cursor}`);
+    lines.push(`${TEXT}Search subagents:${RESET} ${query}${cursor}`);
     lines.push('');
 
     // Results - keep showing existing results while loading new ones
@@ -111,7 +111,7 @@ async function runSearchPrompt(initialQuery = ''): Promise<SearchSkill | null> {
     } else if (results.length === 0 && loading) {
       lines.push(`${DIM}Searching...${RESET}`);
     } else if (results.length === 0) {
-      lines.push(`${DIM}No skills found${RESET}`);
+      lines.push(`${DIM}No subagents found${RESET}`);
     } else {
       const maxVisible = 8;
       const visible = results.slice(0, maxVisible);
@@ -168,7 +168,7 @@ async function runSearchPrompt(initialQuery = ''): Promise<SearchSkill | null> {
 
     debounceTimer = setTimeout(async () => {
       try {
-        results = await searchSkillsAPI(q);
+        results = await searchSubagentsAPI(q);
         selectedIndex = 0;
       } catch {
         results = [];
@@ -271,12 +271,12 @@ export async function runFind(args: string[]): Promise<void> {
   const query = args.join(' ');
   const isNonInteractive = !process.stdin.isTTY;
   const agentTip = `${DIM}Tip: if running in a coding agent, follow these steps:${RESET}
-${DIM}  1) npx skills find [query]${RESET}
-${DIM}  2) npx skills add <owner/repo@skill>${RESET}`;
+${DIM}  1) npx subagents find [query]${RESET}
+${DIM}  2) npx subagents add <owner/repo@agent-name>${RESET}`;
 
   // Non-interactive mode: just print results and exit
   if (query) {
-    const results = await searchSkillsAPI(query);
+    const results = await searchSubagentsAPI(query);
 
     // Track telemetry for non-interactive search
     track({
@@ -286,11 +286,11 @@ ${DIM}  2) npx skills add <owner/repo@skill>${RESET}`;
     });
 
     if (results.length === 0) {
-      console.log(`${DIM}No skills found for "${query}"${RESET}`);
+      console.log(`${DIM}No subagents found for "${query}"${RESET}`);
       return;
     }
 
-    console.log(`${DIM}Install with${RESET} npx skills add <owner/repo@skill>`);
+    console.log(`${DIM}Install with${RESET} npx subagents add <owner/repo@agent-name>`);
     console.log();
 
     for (const skill of results.slice(0, 6)) {
@@ -343,10 +343,10 @@ ${DIM}  2) npx skills add <owner/repo@skill>${RESET}`;
   const info = getOwnerRepoFromString(pkg);
   if (info && (await isRepoPublic(info.owner, info.repo))) {
     console.log(
-      `${DIM}View the skill at${RESET} ${TEXT}https://skills.sh/${selected.slug}${RESET}`
+      `${DIM}View the subagent at${RESET} ${TEXT}https://skills.sh/${selected.slug}${RESET}`
     );
   } else {
-    console.log(`${DIM}Discover more skills at${RESET} ${TEXT}https://skills.sh${RESET}`);
+    console.log(`${DIM}Discover more subagents at${RESET} ${TEXT}https://skills.sh${RESET}`);
   }
 
   console.log();

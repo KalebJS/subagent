@@ -168,19 +168,19 @@ describe('parseSource', () => {
       expect(result.subpath).toBeUndefined();
     });
 
-    it('GitHub shorthand - owner/repo@skill (skill filter syntax)', () => {
-      const result = parseSource('owner/repo@my-skill');
+    it('GitHub shorthand - owner/repo@agent (agent filter syntax)', () => {
+      const result = parseSource('owner/repo@my-agent');
       expect(result.type).toBe('github');
       expect(result.url).toBe('https://github.com/owner/repo.git');
-      expect(result.skillFilter).toBe('my-skill');
+      expect(result.agentFilter).toBe('my-agent');
       expect(result.subpath).toBeUndefined();
     });
 
-    it('GitHub shorthand - owner/repo@skill with hyphenated skill name', () => {
-      const result = parseSource('vercel-labs/agent-skills@find-skills');
+    it('GitHub shorthand - owner/repo@agent with hyphenated agent name', () => {
+      const result = parseSource('VoltAgent/awesome-claude-code-subagents@code-reviewer');
       expect(result.type).toBe('github');
-      expect(result.url).toBe('https://github.com/vercel-labs/agent-skills.git');
-      expect(result.skillFilter).toBe('find-skills');
+      expect(result.url).toBe('https://github.com/VoltAgent/awesome-claude-code-subagents.git');
+      expect(result.agentFilter).toBe('code-reviewer');
     });
 
     it('GitHub shorthand - owner/repo#branch', () => {
@@ -199,12 +199,12 @@ describe('parseSource', () => {
       expect(result.subpath).toBe('skills/my-skill');
     });
 
-    it('GitHub shorthand - owner/repo#branch@skill', () => {
-      const result = parseSource('owner/repo#my-branch@my-skill');
+    it('GitHub shorthand - owner/repo#branch@agent', () => {
+      const result = parseSource('owner/repo#my-branch@my-agent');
       expect(result.type).toBe('github');
       expect(result.url).toBe('https://github.com/owner/repo.git');
       expect(result.ref).toBe('my-branch');
-      expect(result.skillFilter).toBe('my-skill');
+      expect(result.agentFilter).toBe('my-agent');
     });
   });
 
@@ -432,11 +432,11 @@ describe('Prefix shorthand tests', () => {
       expect(result.subpath).toBe('skills/my-skill');
     });
 
-    it('github:owner/repo@skill-name', () => {
-      const result = parseSource('github:owner/repo@my-skill');
+    it('github:owner/repo@agent-name', () => {
+      const result = parseSource('github:owner/repo@my-agent');
       expect(result.type).toBe('github');
       expect(result.url).toBe('https://github.com/owner/repo.git');
-      expect(result.skillFilter).toBe('my-skill');
+      expect(result.agentFilter).toBe('my-agent');
     });
 
     it('github:googleworkspace/cli', () => {

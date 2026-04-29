@@ -2,13 +2,13 @@ export interface UpdateSourceEntry {
   source: string;
   sourceUrl: string;
   ref?: string;
-  skillPath?: string;
+  subagentPath?: string;
 }
 
 export interface LocalUpdateSourceEntry {
   source: string;
   ref?: string;
-  skillPath?: string;
+  subagentPath?: string;
 }
 
 export function formatSourceInput(sourceUrl: string, ref?: string): string {
@@ -19,15 +19,17 @@ export function formatSourceInput(sourceUrl: string, ref?: string): string {
 }
 
 /**
- * Derive the skill's folder path from a SKILL.md-terminated skillPath.
- * Returns '' when the skill lives at the repo root.
+ * Derive the subagent's directory path from a .md file path.
+ * Returns '' when the subagent lives at the repo root.
  */
-function deriveSkillFolder(skillPath: string): string {
-  let folder = skillPath;
-  if (folder.endsWith('/SKILL.md')) {
-    folder = folder.slice(0, -9);
-  } else if (folder.endsWith('SKILL.md')) {
-    folder = folder.slice(0, -8);
+function deriveSubagentFolder(subagentPath: string): string {
+  let folder = subagentPath;
+  // Remove the filename (e.g., "agents/code-reviewer.md" -> "agents")
+  const lastSlash = folder.lastIndexOf('/');
+  if (lastSlash >= 0) {
+    folder = folder.slice(0, lastSlash);
+  } else {
+    folder = '';
   }
   if (folder.endsWith('/')) {
     folder = folder.slice(0, -1);
@@ -35,31 +37,28 @@ function deriveSkillFolder(skillPath: string): string {
   return folder;
 }
 
-function appendFolderAndRef(source: string, skillPath: string, ref?: string): string {
-  const folder = deriveSkillFolder(skillPath);
+function appendFolderAndRef(source: string, subagentPath: string, ref?: string): string {
+  const folder = deriveSubagentFolder(subagentPath);
   const withFolder = folder ? `${source}/${folder}` : source;
   return ref ? `${withFolder}#${ref}` : withFolder;
 }
 
 /**
- * Build the source argument for `skills add` during update.
- * Uses shorthand form for path-targeted updates to avoid branch/path ambiguity.
+ * Build the source argument for `subagents add` during update.
  */
 export function buildUpdateInstallSource(entry: UpdateSourceEntry): string {
-  if (!entry.skillPath) {
+  if (!entry.subagentPath) {
     return formatSourceInput(entry.sourceUrl, entry.ref);
   }
-  return appendFolderAndRef(entry.source, entry.skillPath, entry.ref);
+  return appendFolderAndRef(entry.source, entry.subagentPath, entry.ref);
 }
 
 /**
- * Build the source argument for `skills add` during project-level update.
- * Local lock entries don't carry `sourceUrl`, so we fall back to the bare
- * `source` identifier when no `skillPath` is available.
+ * Build the source argument for `subagents add` during project-level update.
  */
 export function buildLocalUpdateSource(entry: LocalUpdateSourceEntry): string {
-  if (!entry.skillPath) {
+  if (!entry.subagentPath) {
     return formatSourceInput(entry.source, entry.ref);
   }
-  return appendFolderAndRef(entry.source, entry.skillPath, entry.ref);
+  return appendFolderAndRef(entry.source, entry.subagentPath, entry.ref);
 }

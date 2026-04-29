@@ -9,7 +9,7 @@ describe('list command', () => {
   let testDir: string;
 
   beforeEach(() => {
-    testDir = join(tmpdir(), `skills-list-test-${Date.now()}`);
+    testDir = join(tmpdir(), `subagents-list-test-${Date.now()}`);
     mkdirSync(testDir, { recursive: true });
   });
 
@@ -77,18 +77,17 @@ describe('list command', () => {
   describe('CLI integration', () => {
     it('should run list command', () => {
       const result = runCli(['list'], testDir);
-      // Empty project dir shows "No project skills found"
-      expect(result.stdout).toContain('No project skills found');
+      expect(result.stdout).toContain('No project subagents found');
       expect(result.exitCode).toBe(0);
     });
 
     it('should run ls alias', () => {
       const result = runCli(['ls'], testDir);
-      expect(result.stdout).toContain('No project skills found');
+      expect(result.stdout).toContain('No project subagents found');
       expect(result.exitCode).toBe(0);
     });
 
-    it('should output empty JSON array when no skills', () => {
+    it('should output empty JSON array when no subagents', () => {
       const result = runCli(['list', '--json'], testDir);
       expect(result.exitCode).toBe(0);
       const parsed = JSON.parse(result.stdout.trim());
@@ -96,16 +95,16 @@ describe('list command', () => {
     });
 
     it('should output valid JSON with --json flag', () => {
-      const skillDir = join(testDir, '.agents', 'skills', 'json-skill');
-      mkdirSync(skillDir, { recursive: true });
+      const agentsDir = join(testDir, '.agents', 'agents');
+      mkdirSync(agentsDir, { recursive: true });
       writeFileSync(
-        join(skillDir, 'SKILL.md'),
+        join(agentsDir, 'json-agent.md'),
         `---
-name: json-skill
-description: A skill for JSON testing
+name: json-agent
+description: A subagent for JSON testing
 ---
 
-# JSON Skill
+# JSON Agent
 `
       );
 
@@ -114,27 +113,24 @@ description: A skill for JSON testing
       const parsed = JSON.parse(result.stdout.trim());
       expect(Array.isArray(parsed)).toBe(true);
       expect(parsed.length).toBe(1);
-      expect(parsed[0].name).toBe('json-skill');
-      expect(parsed[0].path).toContain('json-skill');
+      expect(parsed[0].name).toBe('json-agent');
+      expect(parsed[0].path).toContain('json-agent');
       expect(parsed[0].scope).toBe('project');
       expect(Array.isArray(parsed[0].agents)).toBe(true);
-      // No ANSI codes in JSON output
       expect(result.stdout).not.toMatch(/\x1b\[/);
     });
 
-    it('should output multiple skills as JSON array', () => {
-      const skill1Dir = join(testDir, '.agents', 'skills', 'skill-alpha');
-      const skill2Dir = join(testDir, '.agents', 'skills', 'skill-beta');
-      mkdirSync(skill1Dir, { recursive: true });
-      mkdirSync(skill2Dir, { recursive: true });
+    it('should output multiple subagents as JSON array', () => {
+      const agentsDir = join(testDir, '.agents', 'agents');
+      mkdirSync(agentsDir, { recursive: true });
 
       writeFileSync(
-        join(skill1Dir, 'SKILL.md'),
-        `---\nname: skill-alpha\ndescription: Alpha\n---\n# Alpha\n`
+        join(agentsDir, 'agent-alpha.md'),
+        `---\nname: agent-alpha\ndescription: Alpha\n---\n# Alpha\n`
       );
       writeFileSync(
-        join(skill2Dir, 'SKILL.md'),
-        `---\nname: skill-beta\ndescription: Beta\n---\n# Beta\n`
+        join(agentsDir, 'agent-beta.md'),
+        `---\nname: agent-beta\ndescription: Beta\n---\n# Beta\n`
       );
 
       const result = runCli(['list', '--json'], testDir);
@@ -142,94 +138,68 @@ description: A skill for JSON testing
       const parsed = JSON.parse(result.stdout.trim());
       expect(parsed.length).toBe(2);
       const names = parsed.map((s: any) => s.name);
-      expect(names).toContain('skill-alpha');
-      expect(names).toContain('skill-beta');
+      expect(names).toContain('agent-alpha');
+      expect(names).toContain('agent-beta');
     });
 
-    it('should show message when no project skills found', () => {
+    it('should show message when no project subagents found', () => {
       const result = runCli(['list'], testDir);
-      expect(result.stdout).toContain('No project skills found');
-      expect(result.stdout).toContain('Try listing global skills with -g');
+      expect(result.stdout).toContain('No project subagents found');
+      expect(result.stdout).toContain('Try listing global subagents with -g');
       expect(result.exitCode).toBe(0);
     });
 
-    it('should list project skills', () => {
-      // Create a skill in the canonical location
-      const skillDir = join(testDir, '.agents', 'skills', 'test-skill');
-      mkdirSync(skillDir, { recursive: true });
+    it('should list project subagents', () => {
+      const agentsDir = join(testDir, '.agents', 'agents');
+      mkdirSync(agentsDir, { recursive: true });
       writeFileSync(
-        join(skillDir, 'SKILL.md'),
+        join(agentsDir, 'test-agent.md'),
         `---
-name: test-skill
-description: A test skill for listing
+name: test-agent
+description: A test subagent for listing
 ---
 
-# Test Skill
-
-This is a test skill.
+# Test Agent
 `
       );
 
       const result = runCli(['list'], testDir);
-      expect(result.stdout).toContain('test-skill');
-      expect(result.stdout).toContain('Project Skills');
-      // Description should not be shown
-      expect(result.stdout).not.toContain('A test skill for listing');
+      expect(result.stdout).toContain('test-agent');
+      expect(result.stdout).toContain('Project Subagents');
       expect(result.exitCode).toBe(0);
     });
 
-    it('should list multiple skills', () => {
-      // Create multiple skills
-      const skill1Dir = join(testDir, '.agents', 'skills', 'skill-one');
-      const skill2Dir = join(testDir, '.agents', 'skills', 'skill-two');
-      mkdirSync(skill1Dir, { recursive: true });
-      mkdirSync(skill2Dir, { recursive: true });
+    it('should list multiple subagents', () => {
+      const agentsDir = join(testDir, '.agents', 'agents');
+      mkdirSync(agentsDir, { recursive: true });
 
       writeFileSync(
-        join(skill1Dir, 'SKILL.md'),
-        `---
-name: skill-one
-description: First skill
----
-# Skill One
-`
+        join(agentsDir, 'agent-one.md'),
+        `---\nname: agent-one\ndescription: First\n---\n# Agent One\n`
       );
-
       writeFileSync(
-        join(skill2Dir, 'SKILL.md'),
-        `---
-name: skill-two
-description: Second skill
----
-# Skill Two
-`
+        join(agentsDir, 'agent-two.md'),
+        `---\nname: agent-two\ndescription: Second\n---\n# Agent Two\n`
       );
 
       const result = runCli(['list'], testDir);
-      expect(result.stdout).toContain('skill-one');
-      expect(result.stdout).toContain('skill-two');
-      expect(result.stdout).toContain('Project Skills');
+      expect(result.stdout).toContain('agent-one');
+      expect(result.stdout).toContain('agent-two');
+      expect(result.stdout).toContain('Project Subagents');
       expect(result.exitCode).toBe(0);
     });
 
     it('should respect -g flag for global only', () => {
-      // Create a project skill (should not be shown with -g)
-      const skillDir = join(testDir, '.agents', 'skills', 'project-skill');
-      mkdirSync(skillDir, { recursive: true });
+      const agentsDir = join(testDir, '.agents', 'agents');
+      mkdirSync(agentsDir, { recursive: true });
       writeFileSync(
-        join(skillDir, 'SKILL.md'),
-        `---
-name: project-skill
-description: A project skill
----
-# Project Skill
-`
+        join(agentsDir, 'project-agent.md'),
+        `---\nname: project-agent\ndescription: A project subagent\n---\n# Project Agent\n`
       );
 
       const result = runCli(['list', '-g'], testDir);
-      // Should not show project skill when -g is specified
-      expect(result.stdout).not.toContain('project-skill');
-      expect(result.stdout).toContain('Global Skills');
+      expect(result.stdout).not.toContain('project-agent');
+      expect(result.stdout).toContain('Global Subagents');
     });
 
     it('should show error for invalid agent filter', () => {
@@ -240,90 +210,60 @@ description: A project skill
     });
 
     it('should filter by valid agent', () => {
-      // Create a skill
-      const skillDir = join(testDir, '.agents', 'skills', 'test-skill');
-      mkdirSync(skillDir, { recursive: true });
+      const agentsDir = join(testDir, '.agents', 'agents');
+      mkdirSync(agentsDir, { recursive: true });
       writeFileSync(
-        join(skillDir, 'SKILL.md'),
-        `---
-name: test-skill
-description: A test skill
----
-# Test Skill
-`
+        join(agentsDir, 'test-agent.md'),
+        `---\nname: test-agent\ndescription: A test subagent\n---\n# Test Agent\n`
       );
 
       const result = runCli(['list', '-a', 'claude-code'], testDir);
-      expect(result.stdout).toContain('test-skill');
+      expect(result.stdout).toContain('test-agent');
       expect(result.exitCode).toBe(0);
     });
 
-    it('should ignore directories without SKILL.md', () => {
-      // Create a valid skill
-      const validDir = join(testDir, '.agents', 'skills', 'valid-skill');
-      mkdirSync(validDir, { recursive: true });
-      writeFileSync(
-        join(validDir, 'SKILL.md'),
-        `---
-name: valid-skill
-description: Valid skill
----
-# Valid
-`
-      );
+    it('should ignore .md files without frontmatter', () => {
+      const agentsDir = join(testDir, '.agents', 'agents');
+      mkdirSync(agentsDir, { recursive: true });
 
-      // Create an invalid directory (no SKILL.md)
-      const invalidDir = join(testDir, '.agents', 'skills', 'invalid-skill');
-      mkdirSync(invalidDir, { recursive: true });
-      writeFileSync(join(invalidDir, 'README.md'), '# Not a skill');
+      writeFileSync(
+        join(agentsDir, 'valid-agent.md'),
+        `---\nname: valid-agent\ndescription: Valid\n---\n# Valid\n`
+      );
+      writeFileSync(join(agentsDir, 'invalid.md'), '# Not a subagent\nNo frontmatter here');
 
       const result = runCli(['list'], testDir);
-      expect(result.stdout).toContain('valid-skill');
-      expect(result.stdout).not.toContain('invalid-skill');
+      expect(result.stdout).toContain('valid-agent');
+      expect(result.stdout).not.toContain('invalid');
       expect(result.exitCode).toBe(0);
     });
 
-    it('should handle SKILL.md with missing frontmatter', () => {
-      // Create a valid skill
-      const validDir = join(testDir, '.agents', 'skills', 'valid-skill');
-      mkdirSync(validDir, { recursive: true });
-      writeFileSync(
-        join(validDir, 'SKILL.md'),
-        `---
-name: valid-skill
-description: Valid skill
----
-# Valid
-`
-      );
+    it('should handle .md with missing frontmatter', () => {
+      const agentsDir = join(testDir, '.agents', 'agents');
+      mkdirSync(agentsDir, { recursive: true });
 
-      // Create a skill with invalid SKILL.md (no frontmatter)
-      const invalidDir = join(testDir, '.agents', 'skills', 'invalid-skill');
-      mkdirSync(invalidDir, { recursive: true });
-      writeFileSync(join(invalidDir, 'SKILL.md'), '# Invalid\nNo frontmatter here');
+      writeFileSync(
+        join(agentsDir, 'valid-agent.md'),
+        `---\nname: valid-agent\ndescription: Valid\n---\n# Valid\n`
+      );
+      writeFileSync(join(agentsDir, 'broken.md'), '# Invalid\nNo frontmatter here');
 
       const result = runCli(['list'], testDir);
-      expect(result.stdout).toContain('valid-skill');
-      expect(result.stdout).not.toContain('invalid-skill');
+      expect(result.stdout).toContain('valid-agent');
+      expect(result.stdout).not.toContain('broken');
       expect(result.exitCode).toBe(0);
     });
 
-    it('should show skill path', () => {
-      const skillDir = join(testDir, '.agents', 'skills', 'test-skill');
-      mkdirSync(skillDir, { recursive: true });
+    it('should show subagent path', () => {
+      const agentsDir = join(testDir, '.agents', 'agents');
+      mkdirSync(agentsDir, { recursive: true });
       writeFileSync(
-        join(skillDir, 'SKILL.md'),
-        `---
-name: test-skill
-description: A test skill
----
-# Test Skill
-`
+        join(agentsDir, 'test-agent.md'),
+        `---\nname: test-agent\ndescription: A test subagent\n---\n# Test Agent\n`
       );
 
       const result = runCli(['list'], testDir);
-      // Path is shown inline with skill name (handles both Unix / and Windows \)
-      expect(result.stdout).toMatch(/\.agents[/\\]skills[/\\]test-skill/);
+      expect(result.stdout).toMatch(/\.agents[/\\]agents[/\\]test-agent\.md/);
     });
   });
 
@@ -331,7 +271,7 @@ description: A test skill
     it('should include list command in help', () => {
       const result = runCli(['--help']);
       expect(result.stdout).toContain('list, ls');
-      expect(result.stdout).toContain('List installed skills');
+      expect(result.stdout).toContain('List installed subagents');
     });
 
     it('should include list options in help', () => {
@@ -343,17 +283,17 @@ description: A test skill
 
     it('should include list examples in help', () => {
       const result = runCli(['--help']);
-      expect(result.stdout).toContain('skills list');
-      expect(result.stdout).toContain('skills ls -g');
-      expect(result.stdout).toContain('skills ls -a claude-code');
+      expect(result.stdout).toContain('subagents list');
+      expect(result.stdout).toContain('subagents ls -g');
+      expect(result.stdout).toContain('subagents ls -a claude-code');
     });
   });
 
   describe('banner', () => {
     it('should include list command in banner', () => {
       const result = runCli([]);
-      expect(result.stdout).toContain('npx skills list');
-      expect(result.stdout).toContain('List installed skills');
+      expect(result.stdout).toContain('npx subagents list');
+      expect(result.stdout).toContain('List installed subagents');
     });
   });
 });

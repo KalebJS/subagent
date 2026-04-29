@@ -21,27 +21,27 @@ describe('update-source', () => {
   });
 
   describe('buildUpdateInstallSource', () => {
-    it('builds root-level install source without trailing slash', () => {
+    it('builds root-level install source for root-level subagent', () => {
       const result = buildUpdateInstallSource({
         source: 'owner/repo',
         sourceUrl: 'https://github.com/owner/repo.git',
         ref: 'feature/install',
-        skillPath: 'SKILL.md',
+        subagentPath: 'code-reviewer.md',
       });
       expect(result).toBe('owner/repo#feature/install');
     });
 
-    it('builds nested skill install source with ref', () => {
+    it('builds nested subagent install source with ref', () => {
       const result = buildUpdateInstallSource({
         source: 'owner/repo',
         sourceUrl: 'https://github.com/owner/repo.git',
         ref: 'feature/install',
-        skillPath: 'skills/my-skill/SKILL.md',
+        subagentPath: 'agents/code-reviewer.md',
       });
-      expect(result).toBe('owner/repo/skills/my-skill#feature/install');
+      expect(result).toBe('owner/repo/agents#feature/install');
     });
 
-    it('falls back to sourceUrl when skillPath is missing', () => {
+    it('falls back to sourceUrl when subagentPath is missing', () => {
       const result = buildUpdateInstallSource({
         source: 'owner/repo',
         sourceUrl: 'https://github.com/owner/repo.git',
@@ -52,32 +52,32 @@ describe('update-source', () => {
   });
 
   describe('buildLocalUpdateSource', () => {
-    it('appends skill folder from skillPath with ref', () => {
+    it('appends subagent folder from subagentPath with ref', () => {
       const result = buildLocalUpdateSource({
         source: 'owner/repo',
         ref: 'main',
-        skillPath: 'skills/my-skill/SKILL.md',
+        subagentPath: 'agents/code-reviewer.md',
       });
-      expect(result).toBe('owner/repo/skills/my-skill#main');
+      expect(result).toBe('owner/repo/agents#main');
     });
 
-    it('appends skill folder from skillPath without ref', () => {
+    it('appends subagent folder from subagentPath without ref', () => {
       const result = buildLocalUpdateSource({
         source: 'owner/repo',
-        skillPath: 'skills/my-skill/SKILL.md',
+        subagentPath: 'agents/code-reviewer.md',
       });
-      expect(result).toBe('owner/repo/skills/my-skill');
+      expect(result).toBe('owner/repo/agents');
     });
 
-    it('keeps root-level skillPath from collapsing to trailing slash', () => {
+    it('keeps root-level subagentPath from collapsing to trailing slash', () => {
       const result = buildLocalUpdateSource({
         source: 'owner/repo',
-        skillPath: 'SKILL.md',
+        subagentPath: 'code-reviewer.md',
       });
       expect(result).toBe('owner/repo');
     });
 
-    it('falls back to bare source when skillPath is missing', () => {
+    it('falls back to bare source when subagentPath is missing', () => {
       const result = buildLocalUpdateSource({
         source: 'owner/repo',
         ref: 'main',

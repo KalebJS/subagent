@@ -1,37 +1,40 @@
-# skills
+# subagents
 
-The CLI for the open agent skills ecosystem.
+A CLI for installing cross-agent subagent definitions from git repos, URLs, or local paths into target agent directories.
 
 <!-- agent-list:start -->
-Supports **OpenCode**, **Claude Code**, **Codex**, **Cursor**, and [50 more](#supported-agents).
+Supports **OpenCode**, **Claude Code**, **Codex**, **Cursor**, and [2 more](#supported-agents).
 <!-- agent-list:end -->
 
-## Install a Skill
+## Install a Subagent
 
 ```bash
-npx skills add vercel-labs/agent-skills
+npx subagents add VoltAgent/awesome-claude-code-subagents
 ```
 
 ### Source Formats
 
 ```bash
 # GitHub shorthand (owner/repo)
-npx skills add vercel-labs/agent-skills
+npx subagents add VoltAgent/awesome-claude-code-subagents
 
 # Full GitHub URL
-npx skills add https://github.com/vercel-labs/agent-skills
+npx subagents add https://github.com/VoltAgent/awesome-claude-code-subagents
 
-# Direct path to a skill in a repo
-npx skills add https://github.com/vercel-labs/agent-skills/tree/main/skills/web-design-guidelines
+# Direct path to a subagent in a repo
+npx subagents add https://github.com/owner/repo/tree/main/agents/my-subagent
 
 # GitLab URL
-npx skills add https://gitlab.com/org/repo
+npx subagents add https://gitlab.com/org/repo
 
 # Any git URL
-npx skills add git@github.com:vercel-labs/agent-skills.git
+npx subagents add git@github.com:owner/repo.git
 
 # Local path
-npx skills add ./my-local-skills
+npx subagents add ./my-local-subagents
+
+# Install a specific subagent by name
+npx subagents add owner/repo@subagent-name
 ```
 
 ### Options
@@ -40,46 +43,43 @@ npx skills add ./my-local-skills
 | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `-g, --global`            | Install to user directory instead of project                                                                                                       |
 | `-a, --agent <agents...>` | <!-- agent-names:start -->Target specific agents (e.g., `claude-code`, `codex`). See [Supported Agents](#supported-agents)<!-- agent-names:end --> |
-| `-s, --skill <skills...>` | Install specific skills by name (use `'*'` for all skills)                                                                                         |
-| `-l, --list`              | List available skills without installing                                                                                                           |
+| `-s, --skill <names...>`  | Install specific subagents by name (use `'*'` for all)                                                                                             |
+| `-l, --list`              | List available subagents without installing                                                                                                         |
 | `--copy`                  | Copy files instead of symlinking to agent directories                                                                                              |
 | `-y, --yes`               | Skip all confirmation prompts                                                                                                                      |
-| `--all`                   | Install all skills to all agents without prompts                                                                                                   |
+| `--all`                   | Install all subagents to all agents without prompts                                                                                                   |
 
 ### Examples
 
 ```bash
-# List skills in a repository
-npx skills add vercel-labs/agent-skills --list
+# List subagents in a repository
+npx subagents add VoltAgent/awesome-claude-code-subagents --list
 
-# Install specific skills
-npx skills add vercel-labs/agent-skills --skill frontend-design --skill skill-creator
-
-# Install a skill with spaces in the name (must be quoted)
-npx skills add owner/repo --skill "Convex Best Practices"
+# Install specific subagents
+npx subagents add owner/repo --skill code-reviewer --skill test-runner
 
 # Install to specific agents
-npx skills add vercel-labs/agent-skills -a claude-code -a opencode
+npx subagents add owner/repo -a claude-code -a opencode
 
 # Non-interactive installation (CI/CD friendly)
-npx skills add vercel-labs/agent-skills --skill frontend-design -g -a claude-code -y
+npx subagents add owner/repo --skill code-reviewer -g -a claude-code -y
 
-# Install all skills from a repo to all agents
-npx skills add vercel-labs/agent-skills --all
+# Install all subagents from a repo to all agents
+npx subagents add owner/repo --all
 
-# Install all skills to specific agents
-npx skills add vercel-labs/agent-skills --skill '*' -a claude-code
+# Install all subagents to specific agents
+npx subagents add owner/repo --skill '*' -a claude-code
 
-# Install specific skills to all agents
-npx skills add vercel-labs/agent-skills --agent '*' --skill frontend-design
+# Install specific subagents to all agents
+npx subagents add owner/repo --agent '*' --skill code-reviewer
 ```
 
 ### Installation Scope
 
-| Scope       | Flag      | Location            | Use Case                                      |
-| ----------- | --------- | ------------------- | --------------------------------------------- |
-| **Project** | (default) | `./<agent>/skills/` | Committed with your project, shared with team |
-| **Global**  | `-g`      | `~/<agent>/skills/` | Available across all projects                 |
+| Scope       | Flag      | Location             | Use Case                                      |
+| ----------- | --------- | -------------------- | --------------------------------------------- |
+| **Project** | (default) | `./<agent>/agents/`  | Committed with your project, shared with team |
+| **Global**  | `-g`      | `~/<agent>/agents/`  | Available across all projects                 |
 
 ### Installation Methods
 
@@ -92,220 +92,189 @@ When installing interactively, you can choose:
 
 ## Other Commands
 
-| Command                      | Description                                   |
-| ---------------------------- | --------------------------------------------- |
-| `npx skills list`            | List installed skills (alias: `ls`)           |
-| `npx skills find [query]`    | Search for skills interactively or by keyword |
-| `npx skills remove [skills]` | Remove installed skills from agents           |
-| `npx skills update [skills]` | Update installed skills to latest versions    |
-| `npx skills init [name]`     | Create a new SKILL.md template                |
+| Command                      | Description                                        |
+| ---------------------------- | -------------------------------------------------- |
+| `npx subagents list`         | List installed subagents (alias: `ls`)             |
+| `npx subagents find [query]` | Search for subagents interactively or by keyword |
+| `npx subagents remove [name]` | Remove installed subagents from agents           |
+| `npx subagents update [names]` | Update installed subagents to latest versions    |
+| `npx subagents init [name]` | Create a new AGENT.md template                    |
 
-### `skills list`
+### `subagents list`
 
-List all installed skills. Similar to `npm ls`.
+List all installed subagents. Similar to `npm ls`.
 
 ```bash
-# List all installed skills (project and global)
-npx skills list
+# List all installed subagents (project and global)
+npx subagents list
 
-# List only global skills
-npx skills ls -g
+# List only global subagents
+npx subagents ls -g
 
 # Filter by specific agents
-npx skills ls -a claude-code -a cursor
+npx subagents ls -a claude-code -a cursor
 ```
 
-### `skills find`
+### `subagents find`
 
-Search for skills interactively or by keyword.
+Search for subagents interactively or by keyword.
 
 ```bash
 # Interactive search (fzf-style)
-npx skills find
+npx subagents find
 
 # Search by keyword
-npx skills find typescript
+npx subagents find typescript
 ```
 
-### `skills update`
+### `subagents update`
 
 ```bash
-# Update all skills (interactive scope prompt)
-npx skills update
+# Update all subagents (interactive scope prompt)
+npx subagents update
 
-# Update a single skill by name
-npx skills update my-skill
+# Update a single subagent by name
+npx subagents update my-subagent
 
-# Update multiple specific skills
-npx skills update frontend-design web-design-guidelines
+# Update multiple specific subagents
+npx subagents update code-reviewer test-runner
 
-# Update only global or project skills
-npx skills update -g
-npx skills update -p
+# Update only global or project subagents
+npx subagents update -g
+npx subagents update -p
 
 # Non-interactive (auto-detects scope: project if in a project, else global)
-npx skills update -y
+npx subagents update -y
 ```
 
 | Option          | Description                                                               |
 | --------------- | ------------------------------------------------------------------------- |
-| `-g, --global`  | Only update global skills                                                 |
-| `-p, --project` | Only update project skills                                                |
+| `-g, --global`  | Only update global subagents                                              |
+| `-p, --project` | Only update project subagents                                             |
 | `-y, --yes`     | Skip scope prompt (auto-detect: project if in a project dir, else global) |
-| `[skills...]`   | Update specific skills by name instead of all                             |
+| `[names...]`    | Update specific subagents by name instead of all                           |
 
-### `skills init`
+### `subagents init`
 
 ```bash
-# Create SKILL.md in current directory
-npx skills init
+# Create AGENT.md in current directory
+npx subagents init
 
-# Create a new skill in a subdirectory
-npx skills init my-skill
+# Create a new subagent in a subdirectory
+npx subagents init my-subagent
 ```
 
-### `skills remove`
+### `subagents remove`
 
-Remove installed skills from agents.
+Remove installed subagents from agents.
 
 ```bash
-# Remove interactively (select from installed skills)
-npx skills remove
+# Remove interactively (select from installed subagents)
+npx subagents remove
 
-# Remove specific skill by name
-npx skills remove web-design-guidelines
+# Remove specific subagent by name
+npx subagents remove my-subagent
 
-# Remove multiple skills
-npx skills remove frontend-design web-design-guidelines
+# Remove multiple subagents
+npx subagents remove code-reviewer test-runner
 
 # Remove from global scope
-npx skills remove --global web-design-guidelines
+npx subagents remove --global my-subagent
 
 # Remove from specific agents only
-npx skills remove --agent claude-code cursor my-skill
+npx subagents remove --agent claude-code cursor my-subagent
 
-# Remove all installed skills without confirmation
-npx skills remove --all
+# Remove all installed subagents without confirmation
+npx subagents remove --all
 
-# Remove all skills from a specific agent
-npx skills remove --skill '*' -a cursor
+# Remove all subagents from a specific agent
+npx subagents remove --skill '*' -a cursor
 
-# Remove a specific skill from all agents
-npx skills remove my-skill --agent '*'
+# Remove a specific subagent from all agents
+npx subagents remove my-subagent --agent '*'
 
 # Use 'rm' alias
-npx skills rm my-skill
+npx subagents rm my-subagent
 ```
 
 | Option         | Description                                      |
 | -------------- | ------------------------------------------------ |
 | `-g, --global` | Remove from global scope (~/) instead of project |
 | `-a, --agent`  | Remove from specific agents (use `'*'` for all)  |
-| `-s, --skill`  | Specify skills to remove (use `'*'` for all)     |
+| `-s, --skill`  | Specify subagents to remove (use `'*'` for all)   |
 | `-y, --yes`    | Skip confirmation prompts                        |
 | `--all`        | Shorthand for `--skill '*' --agent '*' -y`       |
 
-## What are Agent Skills?
+## What are Subagents?
 
-Agent skills are reusable instruction sets that extend your coding agent's capabilities. They're defined in `SKILL.md`
-files with YAML frontmatter containing a `name` and `description`.
+Subagents are named, isolated agent personas defined in single Markdown files with YAML frontmatter. Each file contains a `name` and `description` (required), plus optional fields like `tools`, `model`, and `mode`. The body of the file is the agent's system prompt.
 
-Skills let agents perform specialized tasks like:
+```markdown
+---
+name: code-reviewer
+description: Reviews diffs for correctness and risks
+tools: [Read, Grep, Glob, Bash]
+model: inherit
+---
 
-- Generating release notes from git history
-- Creating PRs following your team's conventions
-- Integrating with external tools (Linear, Notion, etc.)
+You are a focused code reviewer. …
+```
 
-Discover skills at **[skills.sh](https://skills.sh)**
+Subagents are installed **verbatim** to each target agent's directory — no per-target frontmatter translation in v1.
+
+### Subagent Discovery
+
+The CLI discovers subagents by scanning for `*.md` files with `name` + `description` YAML frontmatter. It searches these locations within a repository:
+
+<!-- subagent-discovery:start -->
+- Root directory (any `.md` file with valid frontmatter)
+- `agents/`
+- `subagents/`
+- `droids/`
+- `.agents/agents/`
+- `.claude/agents/`
+- `.codex/agents/`
+- `.cursor/agents/`
+- `.factory/droids/`
+- `.opencode/agents/`
+<!-- subagent-discovery:end -->
+
+If no subagents are found in standard locations, a recursive search is performed.
 
 ## Supported Agents
 
-Skills can be installed to any of these agents:
+Subagents can be installed to any of these agents:
 
 <!-- supported-agents:start -->
 | Agent | `--agent` | Project Path | Global Path |
 |-------|-----------|--------------|-------------|
-| AiderDesk | `aider-desk` | `.aider-desk/skills/` | `~/.aider-desk/skills/` |
-| Amp, Kimi Code CLI, Replit, Universal | `amp`, `kimi-cli`, `replit`, `universal` | `.agents/skills/` | `~/.config/agents/skills/` |
-| Antigravity | `antigravity` | `.agents/skills/` | `~/.gemini/antigravity/skills/` |
-| Augment | `augment` | `.augment/skills/` | `~/.augment/skills/` |
-| IBM Bob | `bob` | `.bob/skills/` | `~/.bob/skills/` |
-| Claude Code | `claude-code` | `.claude/skills/` | `~/.claude/skills/` |
-| OpenClaw | `openclaw` | `skills/` | `~/.openclaw/skills/` |
-| Cline, Dexto, Warp | `cline`, `dexto`, `warp` | `.agents/skills/` | `~/.agents/skills/` |
-| CodeArts Agent | `codearts-agent` | `.codeartsdoer/skills/` | `~/.codeartsdoer/skills/` |
-| CodeBuddy | `codebuddy` | `.codebuddy/skills/` | `~/.codebuddy/skills/` |
-| Codemaker | `codemaker` | `.codemaker/skills/` | `~/.codemaker/skills/` |
-| Code Studio | `codestudio` | `.codestudio/skills/` | `~/.codestudio/skills/` |
-| Codex | `codex` | `.agents/skills/` | `~/.codex/skills/` |
-| Command Code | `command-code` | `.commandcode/skills/` | `~/.commandcode/skills/` |
-| Continue | `continue` | `.continue/skills/` | `~/.continue/skills/` |
-| Cortex Code | `cortex` | `.cortex/skills/` | `~/.snowflake/cortex/skills/` |
-| Crush | `crush` | `.crush/skills/` | `~/.config/crush/skills/` |
-| Cursor | `cursor` | `.agents/skills/` | `~/.cursor/skills/` |
-| Deep Agents | `deepagents` | `.agents/skills/` | `~/.deepagents/agent/skills/` |
-| Devin for Terminal | `devin` | `.devin/skills/` | `~/.config/devin/skills/` |
-| Droid | `droid` | `.factory/skills/` | `~/.factory/skills/` |
-| Firebender | `firebender` | `.agents/skills/` | `~/.firebender/skills/` |
-| ForgeCode | `forgecode` | `.forge/skills/` | `~/.forge/skills/` |
-| Gemini CLI | `gemini-cli` | `.agents/skills/` | `~/.gemini/skills/` |
-| GitHub Copilot | `github-copilot` | `.agents/skills/` | `~/.copilot/skills/` |
-| Goose | `goose` | `.goose/skills/` | `~/.config/goose/skills/` |
-| Junie | `junie` | `.junie/skills/` | `~/.junie/skills/` |
-| iFlow CLI | `iflow-cli` | `.iflow/skills/` | `~/.iflow/skills/` |
-| Kilo Code | `kilo` | `.kilocode/skills/` | `~/.kilocode/skills/` |
-| Kiro CLI | `kiro-cli` | `.kiro/skills/` | `~/.kiro/skills/` |
-| Kode | `kode` | `.kode/skills/` | `~/.kode/skills/` |
-| MCPJam | `mcpjam` | `.mcpjam/skills/` | `~/.mcpjam/skills/` |
-| Mistral Vibe | `mistral-vibe` | `.vibe/skills/` | `~/.vibe/skills/` |
-| Mux | `mux` | `.mux/skills/` | `~/.mux/skills/` |
-| OpenCode | `opencode` | `.agents/skills/` | `~/.config/opencode/skills/` |
-| OpenHands | `openhands` | `.openhands/skills/` | `~/.openhands/skills/` |
-| Pi | `pi` | `.pi/skills/` | `~/.pi/agent/skills/` |
-| Qoder | `qoder` | `.qoder/skills/` | `~/.qoder/skills/` |
-| Qwen Code | `qwen-code` | `.qwen/skills/` | `~/.qwen/skills/` |
-| Rovo Dev | `rovodev` | `.rovodev/skills/` | `~/.rovodev/skills/` |
-| Roo Code | `roo` | `.roo/skills/` | `~/.roo/skills/` |
-| Tabnine CLI | `tabnine-cli` | `.tabnine/agent/skills/` | `~/.tabnine/agent/skills/` |
-| Trae | `trae` | `.trae/skills/` | `~/.trae/skills/` |
-| Trae CN | `trae-cn` | `.trae/skills/` | `~/.trae-cn/skills/` |
-| Windsurf | `windsurf` | `.windsurf/skills/` | `~/.codeium/windsurf/skills/` |
-| Zencoder | `zencoder` | `.zencoder/skills/` | `~/.zencoder/skills/` |
-| Neovate | `neovate` | `.neovate/skills/` | `~/.neovate/skills/` |
-| Pochi | `pochi` | `.pochi/skills/` | `~/.pochi/skills/` |
-| AdaL | `adal` | `.adal/skills/` | `~/.adal/skills/` |
+| Amp | `amp` | `.agents/agents/` | `~/.config/agents/agents/` |
+| Claude Code | `claude-code` | `.claude/agents/` | `~/.claude/agents/` |
+| Codex | `codex` | `.codex/agents/` | `~/.codex/agents/` |
+| Cursor | `cursor` | `.cursor/agents/` | `~/.cursor/agents/` |
+| Factory (Droid) | `factory` | `.factory/droids/` | `~/.factory/droids/` |
+| OpenCode | `opencode` | `.opencode/agents/` | `~/.config/opencode/agents/` |
 <!-- supported-agents:end -->
 
-> [!NOTE]
-> **Kiro CLI users:** The default agent automatically loads skills from `.kiro/skills/` and `~/.kiro/skills/` — no
-> configuration needed. If you use a **custom agent**, add skills to its `resources` in `.kiro/agents/<agent>.json`:
->
-> ```json
-> {
->   "resources": ["skill://.kiro/skills/**/SKILL.md"]
-> }
-> ```
+The CLI automatically detects which coding agents you have installed. If none are detected, you'll be prompted to select which agents to install to.
 
-The CLI automatically detects which coding agents you have installed. If none are detected, you'll be prompted to select
-which agents to install to.
+## Creating Subagents
 
-## Creating Skills
-
-Skills are directories containing a `SKILL.md` file with YAML frontmatter:
+Subagents are Markdown files with YAML frontmatter:
 
 ```markdown
 ---
-name: my-skill
-description: What this skill does and when to use it
+name: my-subagent
+description: What this subagent does and when to use it
 ---
 
-# My Skill
+# My Subagent
 
-Instructions for the agent to follow when this skill is activated.
+Instructions for the agent to follow when this subagent is activated.
 
 ## When to Use
 
-Describe the scenarios where this skill should be used.
+Describe the scenarios where this subagent should be used.
 
 ## Steps
 
@@ -316,118 +285,35 @@ Describe the scenarios where this skill should be used.
 ### Required Fields
 
 - `name`: Unique identifier (lowercase, hyphens allowed)
-- `description`: Brief explanation of what the skill does
+- `description`: Brief explanation of what the subagent does
 
 ### Optional Fields
 
-- `metadata.internal`: Set to `true` to hide the skill from normal discovery. Internal skills are only visible and
-  installable when `INSTALL_INTERNAL_SKILLS=1` is set. Useful for work-in-progress skills or skills meant only for
-  internal tooling.
+- `tools`: Array of tool names the subagent can use (e.g., `[Read, Grep, Glob, Bash]`)
+- `model`: Model specification (e.g., `inherit` to use the parent agent's model)
+- `mode`: Agent mode (e.g., `subagent`)
+- `metadata.internal`: Set to `true` to hide the subagent from normal discovery. Internal subagents are only visible and installable when `INSTALL_INTERNAL_SKILLS=1` is set.
 
 ```markdown
 ---
-name: my-internal-skill
-description: An internal skill not shown by default
+name: my-internal-subagent
+description: An internal subagent not shown by default
 metadata:
   internal: true
 ---
 ```
 
-### Skill Discovery
-
-The CLI searches for skills in these locations within a repository:
-
-<!-- skill-discovery:start -->
-- Root directory (if it contains `SKILL.md`)
-- `skills/`
-- `skills/.curated/`
-- `skills/.experimental/`
-- `skills/.system/`
-- `.aider-desk/skills/`
-- `.agents/skills/`
-- `.augment/skills/`
-- `.bob/skills/`
-- `.claude/skills/`
-- `.codeartsdoer/skills/`
-- `.codebuddy/skills/`
-- `.codemaker/skills/`
-- `.codestudio/skills/`
-- `.commandcode/skills/`
-- `.continue/skills/`
-- `.cortex/skills/`
-- `.crush/skills/`
-- `.devin/skills/`
-- `.factory/skills/`
-- `.forge/skills/`
-- `.goose/skills/`
-- `.junie/skills/`
-- `.iflow/skills/`
-- `.kilocode/skills/`
-- `.kiro/skills/`
-- `.kode/skills/`
-- `.mcpjam/skills/`
-- `.vibe/skills/`
-- `.mux/skills/`
-- `.openhands/skills/`
-- `.pi/skills/`
-- `.qoder/skills/`
-- `.qwen/skills/`
-- `.rovodev/skills/`
-- `.roo/skills/`
-- `.tabnine/agent/skills/`
-- `.trae/skills/`
-- `.windsurf/skills/`
-- `.zencoder/skills/`
-- `.neovate/skills/`
-- `.pochi/skills/`
-- `.adal/skills/`
-<!-- skill-discovery:end -->
-
-### Plugin Manifest Discovery
-
-If `.claude-plugin/marketplace.json` or `.claude-plugin/plugin.json` exists, skills declared in those files are also discovered:
-
-```json
-// .claude-plugin/marketplace.json
-{
-  "metadata": { "pluginRoot": "./plugins" },
-  "plugins": [
-    {
-      "name": "my-plugin",
-      "source": "my-plugin",
-      "skills": ["./skills/review", "./skills/test"]
-    }
-  ]
-}
-```
-
-This enables compatibility with the [Claude Code plugin marketplace](https://code.claude.com/docs/en/plugin-marketplaces) ecosystem.
-
-If no skills are found in standard locations, a recursive search is performed.
-
-## Compatibility
-
-Skills are generally compatible across agents since they follow a
-shared [Agent Skills specification](https://agentskills.io). However, some features may be agent-specific:
-
-| Feature         | OpenCode | OpenHands | Claude Code | Cline | CodeBuddy | Codex | Command Code | Kiro CLI | Cursor | Antigravity | Roo Code | Github Copilot | Amp | OpenClaw | Neovate | Pi  | Qoder | Zencoder |
-| --------------- | -------- | --------- | ----------- | ----- | --------- | ----- | ------------ | -------- | ------ | ----------- | -------- | -------------- | --- | -------- | ------- | --- | ----- | -------- |
-| Basic skills    | Yes      | Yes       | Yes         | Yes   | Yes       | Yes   | Yes          | Yes      | Yes    | Yes         | Yes      | Yes            | Yes | Yes      | Yes     | Yes | Yes   | Yes      |
-| `allowed-tools` | Yes      | Yes       | Yes         | Yes   | Yes       | Yes   | Yes          | No       | Yes    | Yes         | Yes      | Yes            | Yes | Yes      | Yes     | Yes | Yes   | No       |
-| `context: fork` | No       | No        | Yes         | No    | No        | No    | No           | No       | No     | No          | No       | No             | No  | No       | No      | No  | No    | No       |
-| Hooks           | No       | No        | Yes         | Yes   | No        | No    | No           | Yes      | No     | No          | No       | No             | No  | No       | No      | No  | No    | No       |
-
 ## Troubleshooting
 
-### "No skills found"
+### "No subagents found"
 
-Ensure the repository contains valid `SKILL.md` files with both `name` and `description` in the frontmatter.
+Ensure the repository contains valid `.md` files with both `name` and `description` in the YAML frontmatter.
 
-### Skill not loading in agent
+### Subagent not loading in agent
 
-- Verify the skill was installed to the correct path
-- Check the agent's documentation for skill loading requirements
-- Ensure the `SKILL.md` frontmatter is valid YAML
+- Verify the subagent was installed to the correct path
+- Check the agent's documentation for subagent/agent loading requirements
+- Ensure the YAML frontmatter is valid
 
 ### Permission errors
 
@@ -435,15 +321,20 @@ Ensure you have write access to the target directory.
 
 ## Environment Variables
 
-| Variable                  | Description                                                                |
-| ------------------------- | -------------------------------------------------------------------------- |
-| `INSTALL_INTERNAL_SKILLS` | Set to `1` or `true` to show and install skills marked as `internal: true` |
-| `DISABLE_TELEMETRY`       | Set to disable anonymous usage telemetry                                   |
-| `DO_NOT_TRACK`            | Alternative way to disable telemetry                                       |
+| Variable                  | Description                                                                   |
+| ------------------------- | ----------------------------------------------------------------------------- |
+| `INSTALL_INTERNAL_SKILLS` | Set to `1` or `true` to show and install subagents marked as `internal: true` |
+| `DISABLE_TELEMETRY`       | Set to disable anonymous usage telemetry                                      |
+| `DO_NOT_TRACK`            | Alternative way to disable telemetry                                          |
+| `GITHUB_TOKEN`            | GitHub API token for higher rate limits                                       |
+| `GH_TOKEN`                | Alternative GitHub API token                                                  |
 
 ```bash
-# Install internal skills
-INSTALL_INTERNAL_SKILLS=1 npx skills add vercel-labs/agent-skills --list
+# Install internal subagents
+INSTALL_INTERNAL_SKILLS=1 npx subagents add owner/repo --list
+
+# Use a GitHub token for higher rate limits
+GITHUB_TOKEN=ghp_xxx npx subagents add owner/repo
 ```
 
 ## Telemetry
@@ -454,35 +345,8 @@ Telemetry is automatically disabled in CI environments.
 
 ## Related Links
 
-- [Agent Skills Specification](https://agentskills.io)
-- [Skills Directory](https://skills.sh)
-- [Amp Skills Documentation](https://ampcode.com/manual#agent-skills)
-- [Antigravity Skills Documentation](https://antigravity.google/docs/skills)
-- [Factory AI / Droid Skills Documentation](https://docs.factory.ai/cli/configuration/skills)
-- [Claude Code Skills Documentation](https://code.claude.com/docs/en/skills)
-- [OpenClaw Skills Documentation](https://docs.openclaw.ai/tools/skills)
-- [Cline Skills Documentation](https://docs.cline.bot/features/skills)
-- [CodeBuddy Skills Documentation](https://www.codebuddy.ai/docs/ide/Features/Skills)
-- [Codex Skills Documentation](https://developers.openai.com/codex/skills)
-- [Command Code Skills Documentation](https://commandcode.ai/docs/skills)
-- [Crush Skills Documentation](https://github.com/charmbracelet/crush?tab=readme-ov-file#agent-skills)
-- [Cursor Skills Documentation](https://cursor.com/docs/context/skills)
-- [Firebender Skills Documentation](https://docs.firebender.com/multi-agent/skills)
-- [Gemini CLI Skills Documentation](https://geminicli.com/docs/cli/skills/)
-- [GitHub Copilot Agent Skills](https://docs.github.com/en/copilot/concepts/agents/about-agent-skills)
-- [iFlow CLI Skills Documentation](https://platform.iflow.cn/en/cli/examples/skill)
-- [Kimi Code CLI Skills Documentation](https://moonshotai.github.io/kimi-cli/en/customization/skills.html)
-- [Kiro CLI Skills Documentation](https://kiro.dev/docs/cli/custom-agents/configuration-reference/#skill-resources)
-- [Kode Skills Documentation](https://github.com/shareAI-lab/kode/blob/main/docs/skills.md)
-- [OpenCode Skills Documentation](https://opencode.ai/docs/skills)
-- [Qwen Code Skills Documentation](https://qwenlm.github.io/qwen-code-docs/en/users/features/skills/)
-- [OpenHands Skills Documentation](https://docs.openhands.ai/modules/usage/how-to/using-skills)
-- [Pi Skills Documentation](https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/docs/skills.md)
-- [Qoder Skills Documentation](https://docs.qoder.com/cli/Skills)
-- [Replit Skills Documentation](https://docs.replit.com/replitai/skills)
-- [Roo Code Skills Documentation](https://docs.roocode.com/features/skills)
-- [Trae Skills Documentation](https://docs.trae.ai/ide/skills)
-- [Vercel Agent Skills Repository](https://github.com/vercel-labs/agent-skills)
+- [VoltAgent/awesome-claude-code-subagents](https://github.com/VoltAgent/awesome-claude-code-subagents) — curated collection of Claude Code subagents
+- [VoltAgent/awesome-codex-subagents](https://github.com/VoltAgent/awesome-codex-subagents) — curated collection of Codex subagents
 
 ## License
 

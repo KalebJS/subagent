@@ -3,12 +3,12 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import { runCliOutput, stripLogo, hasLogo } from './test-utils.ts';
 
-describe('skills CLI', () => {
+describe('subagents CLI', () => {
   describe('--help', () => {
     it('should display help message', () => {
       const output = runCliOutput(['--help']);
-      expect(output).toContain('Usage: skills <command> [options]');
-      expect(output).toContain('Manage Skills:');
+      expect(output).toContain('Usage: subagents <command> [options]');
+      expect(output).toContain('Manage Subagents:');
       expect(output).toContain('init [name]');
       expect(output).toContain('add <package>');
       expect(output).toContain('update');
@@ -46,11 +46,10 @@ describe('skills CLI', () => {
   describe('no arguments', () => {
     it('should display banner', () => {
       const output = stripLogo(runCliOutput([]));
-      expect(output).toContain('The open agent skills ecosystem');
-      expect(output).toContain('npx skills add');
-      expect(output).toContain('npx skills update');
-      expect(output).toContain('npx skills init');
-      expect(output).toContain('skills.sh');
+      expect(output).toContain('The open subagent ecosystem');
+      expect(output).toContain('npx subagents add');
+      expect(output).toContain('npx subagents update');
+      expect(output).toContain('npx subagents init');
     });
   });
 
@@ -59,7 +58,7 @@ describe('skills CLI', () => {
       const output = runCliOutput(['unknown-command']);
       expect(output).toMatchInlineSnapshot(`
         "Unknown command: unknown-command
-        Run skills --help for usage.
+        Run subagents --help for usage.
         "
       `);
     });
@@ -72,13 +71,11 @@ describe('skills CLI', () => {
     });
 
     it('should not display logo for check command', () => {
-      // Note: check command makes GitHub API calls, so we just verify initial output
       const output = runCliOutput(['check']);
       expect(hasLogo(output)).toBe(false);
     }, 60000);
 
     it('should not display logo for update command', () => {
-      // Note: update command makes GitHub API calls, so we just verify initial output
       const output = runCliOutput(['update']);
       expect(hasLogo(output)).toBe(false);
     }, 60000);

@@ -131,7 +131,7 @@ const SOURCE_ALIASES: Record<string, string> = {
 interface FragmentRefResult {
   inputWithoutFragment: string;
   ref?: string;
-  skillFilter?: string;
+  agentFilter?: string;
 }
 
 function decodeFragmentValue(value: string): string {
@@ -202,19 +202,19 @@ function parseFragmentRef(input: string): FragmentRefResult {
   }
 
   const ref = fragment.slice(0, atIndex);
-  const skillFilter = fragment.slice(atIndex + 1);
+  const agentFilter = fragment.slice(atIndex + 1);
   return {
     inputWithoutFragment,
     ref: ref ? decodeFragmentValue(ref) : undefined,
-    skillFilter: skillFilter ? decodeFragmentValue(skillFilter) : undefined,
+    agentFilter: agentFilter ? decodeFragmentValue(agentFilter) : undefined,
   };
 }
 
-function appendFragmentRef(input: string, ref?: string, skillFilter?: string): string {
+function appendFragmentRef(input: string, ref?: string, agentFilter?: string): string {
   if (!ref) {
     return input;
   }
-  return `${input}#${ref}${skillFilter ? `@${skillFilter}` : ''}`;
+  return `${input}#${ref}${agentFilter ? `@${agentFilter}` : ''}`;
 }
 
 export function parseSource(input: string): ParsedSource {
@@ -232,7 +232,7 @@ export function parseSource(input: string): ParsedSource {
   const {
     inputWithoutFragment,
     ref: fragmentRef,
-    skillFilter: fragmentSkillFilter,
+    agentFilter: fragmentAgentFilter,
   } = parseFragmentRef(input);
   input = inputWithoutFragment;
 
@@ -246,7 +246,7 @@ export function parseSource(input: string): ParsedSource {
   // Also supports github:owner/repo/subpath and github:owner/repo@skill
   const githubPrefixMatch = input.match(/^github:(.+)$/);
   if (githubPrefixMatch) {
-    return parseSource(appendFragmentRef(githubPrefixMatch[1]!, fragmentRef, fragmentSkillFilter));
+    return parseSource(appendFragmentRef(githubPrefixMatch[1]!, fragmentRef, fragmentAgentFilter));
   }
 
   // Prefix shorthand: gitlab:owner/repo -> https://gitlab.com/owner/repo
@@ -256,7 +256,7 @@ export function parseSource(input: string): ParsedSource {
       appendFragmentRef(
         `https://gitlab.com/${gitlabPrefixMatch[1]!}`,
         fragmentRef,
-        fragmentSkillFilter
+        fragmentAgentFilter
       )
     );
   }
@@ -353,7 +353,7 @@ export function parseSource(input: string): ParsedSource {
       type: 'github',
       url: `https://github.com/${owner}/${repo}.git`,
       ...(fragmentRef ? { ref: fragmentRef } : {}),
-      skillFilter: fragmentSkillFilter || skillFilter,
+      agentFilter: fragmentAgentFilter || skillFilter,
     };
   }
 
@@ -365,7 +365,7 @@ export function parseSource(input: string): ParsedSource {
       url: `https://github.com/${owner}/${repo}.git`,
       ...(fragmentRef ? { ref: fragmentRef } : {}),
       subpath: subpath ? sanitizeSubpath(subpath) : subpath,
-      ...(fragmentSkillFilter ? { skillFilter: fragmentSkillFilter } : {}),
+      ...(fragmentAgentFilter ? { agentFilter: fragmentAgentFilter } : {}),
     };
   }
 

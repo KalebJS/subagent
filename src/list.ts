@@ -1,7 +1,7 @@
 import { homedir } from 'os';
 import type { AgentType } from './types.ts';
 import { agents } from './agents.ts';
-import { listInstalledSkills, type InstalledSkill } from './installer.ts';
+import { listInstalledSubagents, type InstalledSubagent } from './installer.ts';
 import { sanitizeMetadata } from './sanitize.ts';
 import { getAllLockedSkills } from './skill-lock.ts';
 
@@ -86,7 +86,7 @@ export async function runList(args: string[]): Promise<void> {
     agentFilter = options.agent as AgentType[];
   }
 
-  const installedSkills = await listInstalledSkills({
+  const installedSkills = await listInstalledSubagents({
     global: scope,
     agentFilter,
   });
@@ -103,7 +103,7 @@ export async function runList(args: string[]): Promise<void> {
     return;
   }
 
-  // Fetch lock entries to get plugin grouping info
+  // Fetch lock entries to get source grouping info
   const lockedSkills = await getAllLockedSkills();
 
   const cwd = process.cwd();
@@ -114,44 +114,44 @@ export async function runList(args: string[]): Promise<void> {
       console.log('[]');
       return;
     }
-    console.log(`${DIM}No ${scopeLabel.toLowerCase()} skills found.${RESET}`);
+    console.log(`${DIM}No ${scopeLabel.toLowerCase()} subagents found.${RESET}`);
     if (scope) {
-      console.log(`${DIM}Try listing project skills without -g${RESET}`);
+      console.log(`${DIM}Try listing project subagents without -g${RESET}`);
     } else {
-      console.log(`${DIM}Try listing global skills with -g${RESET}`);
+      console.log(`${DIM}Try listing global subagents with -g${RESET}`);
     }
     return;
   }
 
-  function printSkill(skill: InstalledSkill, indent: boolean = false): void {
+  function printSubagent(subagent: InstalledSubagent, indent: boolean = false): void {
     const prefix = indent ? '  ' : '';
-    const shortPath = shortenPath(skill.canonicalPath, cwd);
-    const agentNames = skill.agents.map((a) => agents[a].displayName);
+    const shortPath = shortenPath(subagent.canonicalPath, cwd);
+    const agentNames = subagent.agents.map((a) => agents[a].displayName);
     const agentInfo =
-      skill.agents.length > 0 ? formatList(agentNames) : `${YELLOW}not linked${RESET}`;
+      subagent.agents.length > 0 ? formatList(agentNames) : `${YELLOW}not linked${RESET}`;
     console.log(
-      `${prefix}${CYAN}${sanitizeMetadata(skill.name)}${RESET} ${DIM}${shortPath}${RESET}`
+      `${prefix}${CYAN}${sanitizeMetadata(subagent.name)}${RESET} ${DIM}${shortPath}${RESET}`
     );
     console.log(`${prefix}  ${DIM}Agents:${RESET} ${agentInfo}`);
   }
 
-  console.log(`${BOLD}${scopeLabel} Skills${RESET}`);
+  console.log(`${BOLD}${scopeLabel} Subagents${RESET}`);
   console.log();
 
-  // Group skills by plugin
-  const groupedSkills: Record<string, InstalledSkill[]> = {};
-  const ungroupedSkills: InstalledSkill[] = [];
+  // Group subagents by source
+  const groupedSkills: Record<string, InstalledSubagent[]> = {};
+  const ungroupedSkills: InstalledSubagent[] = [];
 
-  for (const skill of installedSkills) {
-    const lockEntry = lockedSkills[skill.name];
-    if (lockEntry?.pluginName) {
-      const group = lockEntry.pluginName;
+  for (const sub of installedSkills) {
+    const lockEntry = lockedSkills[sub.name];
+    const group = lockEntry?.source;
+    if (group) {
       if (!groupedSkills[group]) {
         groupedSkills[group] = [];
       }
-      groupedSkills[group].push(skill);
+      groupedSkills[group].push(sub);
     } else {
-      ungroupedSkills.push(skill);
+      ungroupedSkills.push(sub);
     }
   }
 
@@ -170,8 +170,8 @@ export async function runList(args: string[]): Promise<void> {
       console.log(`${BOLD}${title}${RESET}`);
       const skills = groupedSkills[group];
       if (skills) {
-        for (const skill of skills) {
-          printSkill(skill, true);
+        for (const sub of skills) {
+          printSubagent(sub, true);
         }
       }
       console.log();
@@ -180,15 +180,15 @@ export async function runList(args: string[]): Promise<void> {
     // Print ungrouped skills if any exist
     if (ungroupedSkills.length > 0) {
       console.log(`${BOLD}General${RESET}`);
-      for (const skill of ungroupedSkills) {
-        printSkill(skill, true);
+      for (const sub of ungroupedSkills) {
+        printSubagent(sub, true);
       }
       console.log();
     }
   } else {
     // No groups, print flat list as before
-    for (const skill of installedSkills) {
-      printSkill(skill);
+    for (const sub of installedSkills) {
+      printSubagent(sub);
     }
     console.log();
   }

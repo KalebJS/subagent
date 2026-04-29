@@ -14,8 +14,8 @@ import { removeCommand, parseRemoveOptions } from './remove.ts';
 import { sanitizeMetadata } from './sanitize.ts';
 import { runSync, parseSyncOptions } from './sync.ts';
 import { track, flushTelemetry } from './telemetry.ts';
-import { fetchSkillFolderHash, getGitHubToken } from './skill-lock.ts';
-import { readLocalLock, type LocalSkillLockEntry } from './local-lock.ts';
+import { fetchSkillFolderHash as fetchSubagentFileHash, getGitHubToken } from './skill-lock.ts';
+import { readLocalLock, type LocalSubagentLockEntry } from './local-lock.ts';
 import {
   buildUpdateInstallSource,
   buildLocalUpdateSource,
@@ -44,12 +44,12 @@ const DIM = '\x1b[38;5;102m'; // darker gray for secondary text
 const TEXT = '\x1b[38;5;145m'; // lighter gray for primary text
 
 const LOGO_LINES = [
-  '███████╗██╗  ██╗██╗██╗     ██╗     ███████╗',
-  '██╔════╝██║ ██╔╝██║██║     ██║     ██╔════╝',
-  '███████╗█████╔╝ ██║██║     ██║     ███████╗',
-  '╚════██║██╔═██╗ ██║██║     ██║     ╚════██║',
-  '███████║██║  ██╗██║███████╗███████╗███████║',
-  '╚══════╝╚═╝  ╚═╝╚═╝╚══════╝╚══════╝╚══════╝',
+  '███████╗██╗   ██╗██████╗  █████╗  ██████╗ ███████╗███╗   ██╗████████╗███████╗',
+  '██╔════╝██║   ██║██╔══██╗██╔══██╗██╔════╝ ██╔════╝████╗  ██║╚══██╔══╝██╔════╝',
+  '███████╗██║   ██║██████╔╝███████║██║  ███╗█████╗  ██╔██╗ ██║   ██║   ███████╗',
+  '╚════██║██║   ██║██╔══██╗██╔══██║██║   ██║██╔══╝  ██║╚██╗██║   ██║   ╚════██║',
+  '███████║╚██████╔╝██████╔╝██║  ██║╚██████╔╝███████╗██║ ╚████║   ██║   ███████║',
+  '╚══════╝ ╚═════╝ ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚═╝  ╚═══╝   ╚═╝   ╚══════╝',
 ];
 
 // 256-color middle grays - visible on both light and dark backgrounds
@@ -72,80 +72,78 @@ function showLogo(): void {
 function showBanner(): void {
   showLogo();
   console.log();
-  console.log(`${DIM}The open agent skills ecosystem${RESET}`);
+  console.log(`${DIM}The open subagent ecosystem${RESET}`);
   console.log();
   console.log(
-    `  ${DIM}$${RESET} ${TEXT}npx skills add ${DIM}<package>${RESET}        ${DIM}Add a new skill${RESET}`
+    `  ${DIM}$${RESET} ${TEXT}npx subagents add ${DIM}<package>${RESET}        ${DIM}Add a new subagent${RESET}`
   );
   console.log(
-    `  ${DIM}$${RESET} ${TEXT}npx skills remove${RESET}               ${DIM}Remove installed skills${RESET}`
+    `  ${DIM}$${RESET} ${TEXT}npx subagents remove${RESET}               ${DIM}Remove installed subagents${RESET}`
   );
   console.log(
-    `  ${DIM}$${RESET} ${TEXT}npx skills list${RESET}                 ${DIM}List installed skills${RESET}`
+    `  ${DIM}$${RESET} ${TEXT}npx subagents list${RESET}                 ${DIM}List installed subagents${RESET}`
   );
   console.log(
-    `  ${DIM}$${RESET} ${TEXT}npx skills find ${DIM}[query]${RESET}         ${DIM}Search for skills${RESET}`
-  );
-  console.log();
-  console.log(
-    `  ${DIM}$${RESET} ${TEXT}npx skills update${RESET}               ${DIM}Update installed skills${RESET}`
+    `  ${DIM}$${RESET} ${TEXT}npx subagents find ${DIM}[query]${RESET}         ${DIM}Search for subagents${RESET}`
   );
   console.log();
   console.log(
-    `  ${DIM}$${RESET} ${TEXT}npx skills experimental_install${RESET} ${DIM}Restore from skills-lock.json${RESET}`
-  );
-  console.log(
-    `  ${DIM}$${RESET} ${TEXT}npx skills init ${DIM}[name]${RESET}          ${DIM}Create a new skill${RESET}`
-  );
-  console.log(
-    `  ${DIM}$${RESET} ${TEXT}npx skills experimental_sync${RESET}    ${DIM}Sync skills from node_modules${RESET}`
+    `  ${DIM}$${RESET} ${TEXT}npx subagents update${RESET}               ${DIM}Update installed subagents${RESET}`
   );
   console.log();
-  console.log(`${DIM}try:${RESET} npx skills add vercel-labs/agent-skills`);
+  console.log(
+    `  ${DIM}$${RESET} ${TEXT}npx subagents experimental_install${RESET} ${DIM}Restore from subagents-lock.json${RESET}`
+  );
+  console.log(
+    `  ${DIM}$${RESET} ${TEXT}npx subagents init ${DIM}[name]${RESET}          ${DIM}Create a new subagent${RESET}`
+  );
+  console.log(
+    `  ${DIM}$${RESET} ${TEXT}npx subagents experimental_sync${RESET}    ${DIM}Sync subagents from node_modules${RESET}`
+  );
   console.log();
-  console.log(`Discover more skills at ${TEXT}https://skills.sh/${RESET}`);
+  console.log(`${DIM}try:${RESET} npx subagents add VoltAgent/awesome-claude-code-subagents`);
   console.log();
 }
 
 function showHelp(): void {
   console.log(`
-${BOLD}Usage:${RESET} skills <command> [options]
+${BOLD}Usage:${RESET} subagents <command> [options]
 
-${BOLD}Manage Skills:${RESET}
-  add <package>        Add a skill package (alias: a)
-                       e.g. vercel-labs/agent-skills
-                            https://github.com/vercel-labs/agent-skills
-  remove [skills]      Remove installed skills
-  list, ls             List installed skills
-  find [query]         Search for skills interactively
+${BOLD}Manage Subagents:${RESET}
+  add <package>        Add a subagent package (alias: a)
+                       e.g. VoltAgent/awesome-claude-code-subagents
+                            https://github.com/VoltAgent/awesome-claude-code-subagents
+  remove [subagents]   Remove installed subagents
+  list, ls             List installed subagents
+  find [query]         Search for subagents interactively
 
 ${BOLD}Updates:${RESET}
-  update [skills...]   Update skills to latest versions (alias: upgrade)
+  update [subagents...] Update subagents to latest versions (alias: upgrade)
 
 ${BOLD}Update Options:${RESET}
-  -g, --global           Update global skills only
-  -p, --project          Update project skills only
+  -g, --global           Update global subagents only
+  -p, --project          Update project subagents only
   -y, --yes              Skip scope prompt (auto-detect: project if in a project, else global)
 
 ${BOLD}Project:${RESET}
-  experimental_install Restore skills from skills-lock.json
-  init [name]          Initialize a skill (creates <name>/SKILL.md or ./SKILL.md)
-  experimental_sync    Sync skills from node_modules into agent directories
+  experimental_install Restore subagents from subagents-lock.json
+  init [name]          Initialize a subagent (creates <name>.md or ./AGENT.md)
+  experimental_sync    Sync subagents from node_modules into agent directories
 
 ${BOLD}Add Options:${RESET}
-  -g, --global           Install skill globally (user-level) instead of project-level
+  -g, --global           Install subagent globally (user-level) instead of project-level
   -a, --agent <agents>   Specify agents to install to (use '*' for all agents)
-  -s, --skill <skills>   Specify skill names to install (use '*' for all skills)
-  -l, --list             List available skills in the repository without installing
+  -s, --skill <skills>   Specify subagent names to install (use '*' for all)
+  -l, --list             List available subagents in the repository without installing
   -y, --yes              Skip confirmation prompts
   --copy                 Copy files instead of symlinking to agent directories
   --all                  Shorthand for --skill '*' --agent '*' -y
-  --full-depth           Search all subdirectories even when a root SKILL.md exists
+  --full-depth           Search all subdirectories
 
 ${BOLD}Remove Options:${RESET}
   -g, --global           Remove from global scope
   -a, --agent <agents>   Remove from specific agents (use '*' for all agents)
-  -s, --skill <skills>   Specify skills to remove (use '*' for all skills)
+  -s, --skill <skills>   Specify subagents to remove (use '*' for all)
   -y, --yes              Skip confirmation prompts
   --all                  Shorthand for --skill '*' --agent '*' -y
   
@@ -154,7 +152,7 @@ ${BOLD}Experimental Sync Options:${RESET}
   -y, --yes              Skip confirmation prompts
 
 ${BOLD}List Options:${RESET}
-  -g, --global           List global skills (default: project)
+  -g, --global           List global subagents (default: project)
   -a, --agent <agents>   Filter by specific agents
   --json                 Output as JSON (machine-readable, no ANSI codes)
 
@@ -163,92 +161,84 @@ ${BOLD}Options:${RESET}
   --version, -v     Show version number
 
 ${BOLD}Examples:${RESET}
-  ${DIM}$${RESET} skills add vercel-labs/agent-skills
-  ${DIM}$${RESET} skills add vercel-labs/agent-skills -g
-  ${DIM}$${RESET} skills add vercel-labs/agent-skills --agent claude-code cursor
-  ${DIM}$${RESET} skills add vercel-labs/agent-skills --skill pr-review commit
-  ${DIM}$${RESET} skills remove                        ${DIM}# interactive remove${RESET}
-  ${DIM}$${RESET} skills remove web-design             ${DIM}# remove by name${RESET}
-  ${DIM}$${RESET} skills rm --global frontend-design
-  ${DIM}$${RESET} skills list                          ${DIM}# list project skills${RESET}
-  ${DIM}$${RESET} skills ls -g                         ${DIM}# list global skills${RESET}
-  ${DIM}$${RESET} skills ls -a claude-code             ${DIM}# filter by agent${RESET}
-  ${DIM}$${RESET} skills ls --json                      ${DIM}# JSON output${RESET}
-  ${DIM}$${RESET} skills find                          ${DIM}# interactive search${RESET}
-  ${DIM}$${RESET} skills find typescript               ${DIM}# search by keyword${RESET}
-  ${DIM}$${RESET} skills update
-  ${DIM}$${RESET} skills update my-skill             ${DIM}# update a single skill${RESET}
-  ${DIM}$${RESET} skills update -g                    ${DIM}# update global skills only${RESET}
-  ${DIM}$${RESET} skills experimental_install            ${DIM}# restore from skills-lock.json${RESET}
-  ${DIM}$${RESET} skills init my-skill
-  ${DIM}$${RESET} skills experimental_sync              ${DIM}# sync from node_modules${RESET}
-  ${DIM}$${RESET} skills experimental_sync -y           ${DIM}# sync without prompts${RESET}
-
-Discover more skills at ${TEXT}https://skills.sh/${RESET}
+  ${DIM}$${RESET} subagents add VoltAgent/awesome-claude-code-subagents
+  ${DIM}$${RESET} subagents add VoltAgent/awesome-claude-code-subagents -g
+  ${DIM}$${RESET} subagents add VoltAgent/awesome-claude-code-subagents --agent claude-code cursor
+  ${DIM}$${RESET} subagents remove                        ${DIM}# interactive remove${RESET}
+  ${DIM}$${RESET} subagents remove code-reviewer           ${DIM}# remove by name${RESET}
+  ${DIM}$${RESET} subagents rm --global my-subagent
+  ${DIM}$${RESET} subagents list                          ${DIM}# list project subagents${RESET}
+  ${DIM}$${RESET} subagents ls -g                         ${DIM}# list global subagents${RESET}
+  ${DIM}$${RESET} subagents ls -a claude-code             ${DIM}# filter by agent${RESET}
+  ${DIM}$${RESET} subagents ls --json                      ${DIM}# JSON output${RESET}
+  ${DIM}$${RESET} subagents find                          ${DIM}# interactive search${RESET}
+  ${DIM}$${RESET} subagents find typescript               ${DIM}# search by keyword${RESET}
+  ${DIM}$${RESET} subagents update
+  ${DIM}$${RESET} subagents update my-subagent            ${DIM}# update a single subagent${RESET}
+  ${DIM}$${RESET} subagents update -g                     ${DIM}# update global subagents only${RESET}
+  ${DIM}$${RESET} subagents experimental_install            ${DIM}# restore from subagents-lock.json${RESET}
+  ${DIM}$${RESET} subagents init my-subagent
+  ${DIM}$${RESET} subagents experimental_sync              ${DIM}# sync from node_modules${RESET}
+  ${DIM}$${RESET} subagents experimental_sync -y           ${DIM}# sync without prompts${RESET}
 `);
 }
 
 function showRemoveHelp(): void {
   console.log(`
-${BOLD}Usage:${RESET} skills remove [skills...] [options]
+${BOLD}Usage:${RESET} subagents remove [subagents...] [options]
 
 ${BOLD}Description:${RESET}
-  Remove installed skills from agents. If no skill names are provided,
+  Remove installed subagents from agents. If no subagent names are provided,
   an interactive selection menu will be shown.
 
 ${BOLD}Arguments:${RESET}
-  skills            Optional skill names to remove (space-separated)
+  subagents          Optional subagent names to remove (space-separated)
 
 ${BOLD}Options:${RESET}
   -g, --global       Remove from global scope (~/) instead of project scope
   -a, --agent        Remove from specific agents (use '*' for all agents)
-  -s, --skill        Specify skills to remove (use '*' for all skills)
+  -s, --skill        Specify subagents to remove (use '*' for all)
   -y, --yes          Skip confirmation prompts
   --all              Shorthand for --skill '*' --agent '*' -y
 
 ${BOLD}Examples:${RESET}
-  ${DIM}$${RESET} skills remove                           ${DIM}# interactive selection${RESET}
-  ${DIM}$${RESET} skills remove my-skill                   ${DIM}# remove specific skill${RESET}
-  ${DIM}$${RESET} skills remove skill1 skill2 -y           ${DIM}# remove multiple skills${RESET}
-  ${DIM}$${RESET} skills remove --global my-skill          ${DIM}# remove from global scope${RESET}
-  ${DIM}$${RESET} skills rm --agent claude-code my-skill   ${DIM}# remove from specific agent${RESET}
-  ${DIM}$${RESET} skills remove --all                      ${DIM}# remove all skills${RESET}
-  ${DIM}$${RESET} skills remove --skill '*' -a cursor      ${DIM}# remove all skills from cursor${RESET}
-
-Discover more skills at ${TEXT}https://skills.sh/${RESET}
+  ${DIM}$${RESET} subagents remove                           ${DIM}# interactive selection${RESET}
+  ${DIM}$${RESET} subagents remove my-subagent                ${DIM}# remove specific subagent${RESET}
+  ${DIM}$${RESET} subagents remove sub1 sub2 -y               ${DIM}# remove multiple subagents${RESET}
+  ${DIM}$${RESET} subagents remove --global my-subagent       ${DIM}# remove from global scope${RESET}
+  ${DIM}$${RESET} subagents rm --agent claude-code my-subagent ${DIM}# remove from specific agent${RESET}
+  ${DIM}$${RESET} subagents remove --all                      ${DIM}# remove all subagents${RESET}
+  ${DIM}$${RESET} subagents remove --skill '*' -a cursor      ${DIM}# remove all subagents from cursor${RESET}
 `);
 }
 
 function runInit(args: string[]): void {
   const cwd = process.cwd();
-  const skillName = args[0] || basename(cwd);
+  const agentName = args[0] || basename(cwd);
   const hasName = args[0] !== undefined;
 
-  const skillDir = hasName ? join(cwd, skillName) : cwd;
-  const skillFile = join(skillDir, 'SKILL.md');
-  const displayPath = hasName ? `${skillName}/SKILL.md` : 'SKILL.md';
+  const agentFile = join(cwd, `${agentName}.md`);
+  const displayPath = hasName ? `${agentName}.md` : 'AGENT.md';
 
-  if (existsSync(skillFile)) {
-    console.log(`${TEXT}Skill already exists at ${DIM}${displayPath}${RESET}`);
+  if (existsSync(agentFile)) {
+    console.log(`${TEXT}Subagent already exists at ${DIM}${displayPath}${RESET}`);
     return;
   }
 
-  if (hasName) {
-    mkdirSync(skillDir, { recursive: true });
-  }
-
-  const skillContent = `---
-name: ${skillName}
-description: A brief description of what this skill does
+  const agentContent = `---
+name: ${agentName}
+description: A brief description of what this subagent does
+tools: [Read, Grep, Glob]
+model: inherit
 ---
 
-# ${skillName}
+# ${agentName}
 
-Instructions for the agent to follow when this skill is activated.
+Instructions for the agent to follow when this subagent is activated.
 
 ## When to use
 
-Describe when this skill should be used.
+Describe when this subagent should be used.
 
 ## Instructions
 
@@ -257,28 +247,26 @@ Describe when this skill should be used.
 3. Additional steps as needed
 `;
 
-  writeFileSync(skillFile, skillContent);
+  writeFileSync(agentFile, agentContent);
 
-  console.log(`${TEXT}Initialized skill: ${DIM}${skillName}${RESET}`);
+  console.log(`${TEXT}Initialized subagent: ${DIM}${agentName}${RESET}`);
   console.log();
   console.log(`${DIM}Created:${RESET}`);
   console.log(`  ${displayPath}`);
   console.log();
   console.log(`${DIM}Next steps:${RESET}`);
-  console.log(`  1. Edit ${TEXT}${displayPath}${RESET} to define your skill instructions`);
+  console.log(`  1. Edit ${TEXT}${displayPath}${RESET} to define your subagent instructions`);
   console.log(
     `  2. Update the ${TEXT}name${RESET} and ${TEXT}description${RESET} in the frontmatter`
   );
   console.log();
   console.log(`${DIM}Publishing:${RESET}`);
   console.log(
-    `  ${DIM}GitHub:${RESET}  Push to a repo, then ${TEXT}npx skills add <owner>/<repo>${RESET}`
+    `  ${DIM}GitHub:${RESET}  Push to a repo, then ${TEXT}npx subagents add <owner>/<repo>${RESET}`
   );
   console.log(
-    `  ${DIM}URL:${RESET}     Host the file, then ${TEXT}npx skills add https://example.com/${displayPath}${RESET}`
+    `  ${DIM}URL:${RESET}     Host the file, then ${TEXT}npx subagents add https://example.com/${displayPath}${RESET}`
   );
-  console.log();
-  console.log(`Browse existing skills for inspiration at ${TEXT}https://skills.sh/${RESET}`);
   console.log();
 }
 
@@ -287,50 +275,48 @@ Describe when this skill should be used.
 // ============================================
 
 const AGENTS_DIR = '.agents';
-const LOCK_FILE = '.skill-lock.json';
-const CURRENT_LOCK_VERSION = 3; // Bumped from 2 to 3 for folder hash support
+const LOCK_FILE = '.subagent-lock.json';
+const CURRENT_LOCK_VERSION = 1;
 
-interface SkillLockEntry {
+interface SubagentLockEntry {
   source: string;
   sourceType: string;
   sourceUrl: string;
   ref?: string;
-  skillPath?: string;
-  /** GitHub tree SHA for the entire skill folder (v3) */
-  skillFolderHash: string;
+  subagentPath?: string;
+  /** GitHub tree SHA or file hash for update detection */
+  subagentFileHash: string;
   installedAt: string;
   updatedAt: string;
 }
 
-interface SkillLockFile {
+interface SubagentLockFile {
   version: number;
-  skills: Record<string, SkillLockEntry>;
+  subagents: Record<string, SubagentLockEntry>;
 }
 
 function getSkillLockPath(): string {
   const xdgStateHome = process.env.XDG_STATE_HOME;
   if (xdgStateHome) {
-    return join(xdgStateHome, 'skills', LOCK_FILE);
+    return join(xdgStateHome, 'subagents', LOCK_FILE);
   }
   return join(homedir(), AGENTS_DIR, LOCK_FILE);
 }
 
-function readSkillLock(): SkillLockFile {
+function readSkillLock(): SubagentLockFile {
   const lockPath = getSkillLockPath();
   try {
     const content = readFileSync(lockPath, 'utf-8');
-    const parsed = JSON.parse(content) as SkillLockFile;
-    if (typeof parsed.version !== 'number' || !parsed.skills) {
-      return { version: CURRENT_LOCK_VERSION, skills: {} };
+    const parsed = JSON.parse(content) as SubagentLockFile;
+    if (typeof parsed.version !== 'number' || !parsed.subagents) {
+      return { version: CURRENT_LOCK_VERSION, subagents: {} };
     }
-    // If old version, wipe and start fresh (backwards incompatible change)
-    // v3 adds skillFolderHash - we want fresh installs to populate it
     if (parsed.version < CURRENT_LOCK_VERSION) {
-      return { version: CURRENT_LOCK_VERSION, skills: {} };
+      return { version: CURRENT_LOCK_VERSION, subagents: {} };
     }
     return parsed;
   } catch {
-    return { version: CURRENT_LOCK_VERSION, skills: {} };
+    return { version: CURRENT_LOCK_VERSION, subagents: {} };
   }
 }
 
@@ -377,22 +363,19 @@ function parseUpdateOptions(args: string[]): UpdateCheckOptions {
 function hasProjectSkills(cwd?: string): boolean {
   const dir = cwd || process.cwd();
 
-  // Check 1: skills-lock.json exists
-  const lockPath = join(dir, 'skills-lock.json');
+  // Check 1: subagents-lock.json exists
+  const lockPath = join(dir, 'subagents-lock.json');
   if (existsSync(lockPath)) {
     return true;
   }
 
-  // Check 2: .agents/skills/ has at least one skill
-  const skillsDir = join(dir, '.agents', 'skills');
+  // Check 2: .agents/agents/ has at least one .md file
+  const agentsDir = join(dir, '.agents', 'agents');
   try {
-    const entries = readdirSync(skillsDir, { withFileTypes: true });
+    const entries = readdirSync(agentsDir, { withFileTypes: true });
     for (const entry of entries) {
-      if (entry.isDirectory()) {
-        const skillMd = join(skillsDir, entry.name, 'SKILL.md');
-        if (existsSync(skillMd)) {
-          return true;
-        }
+      if (entry.isFile() && entry.name.endsWith('.md')) {
+        return true;
       }
     }
   } catch {
@@ -481,7 +464,7 @@ function matchesSkillFilter(name: string, filter?: string[]): boolean {
   return filter.some((f) => f.toLowerCase() === lower);
 }
 
-interface SkippedSkill {
+interface SkippedSubagent {
   name: string;
   reason: string;
   sourceUrl: string;
@@ -490,9 +473,9 @@ interface SkippedSkill {
 }
 
 /**
- * Determine why a skill cannot be checked for updates automatically.
+ * Determine why a subagent cannot be checked for updates automatically.
  */
-function getSkipReason(entry: SkillLockEntry): string {
+function getSkipReason(entry: SubagentLockEntry): string {
   if (entry.sourceType === 'local') {
     return 'Local path';
   }
@@ -500,66 +483,54 @@ function getSkipReason(entry: SkillLockEntry): string {
     return 'Git URL';
   }
   if (entry.sourceType === 'well-known') {
-    return 'Well-known skill';
+    return 'Well-known subagent';
   }
-  if (!entry.skillFolderHash) {
+  if (!entry.subagentFileHash) {
     return 'Private or deleted repo';
   }
-  if (!entry.skillPath) {
-    return 'No skill path recorded';
+  if (!entry.subagentPath) {
+    return 'No subagent path recorded';
   }
   return 'No version tracking';
 }
 
-/**
- * For well-known skills, strip the .well-known/... path and /SKILL.md suffix
- * to produce the base URL the user originally used to install.
- * e.g., "https://mintlify.com/docs/.well-known/skills/mintlify/SKILL.md"
- *    -> "https://mintlify.com/docs"
- */
-function getInstallSource(skill: SkippedSkill): string {
-  let url = skill.sourceUrl;
-  if (skill.sourceType === 'well-known') {
-    // Strip everything from /.well-known/ onwards
+function getInstallSource(subagent: SkippedSubagent): string {
+  let url = subagent.sourceUrl;
+  if (subagent.sourceType === 'well-known') {
     const idx = url.indexOf('/.well-known/');
     if (idx !== -1) {
       url = url.slice(0, idx);
     }
   }
-  return formatSourceInput(url, skill.ref);
+  return formatSourceInput(url, subagent.ref);
 }
 
 /**
- * Print a list of skills that cannot be checked automatically,
- * with the reason and a manual update command for each.
- * Skills from the same source are grouped together.
+ * Print a list of subagents that cannot be checked automatically.
  */
-function printSkippedSkills(skipped: SkippedSkill[]): void {
+function printSkippedSkills(skipped: SkippedSubagent[]): void {
   if (skipped.length === 0) return;
   console.log();
-  console.log(`${DIM}${skipped.length} skill(s) cannot be checked automatically:${RESET}`);
+  console.log(`${DIM}${skipped.length} subagent(s) cannot be checked automatically:${RESET}`);
 
-  // Group by install source to dedupe skills from the same repo
-  const grouped = new Map<string, SkippedSkill[]>();
-  for (const skill of skipped) {
-    const source = getInstallSource(skill);
+  const grouped = new Map<string, SkippedSubagent[]>();
+  for (const sub of skipped) {
+    const source = getInstallSource(sub);
     const existing = grouped.get(source) || [];
-    existing.push(skill);
+    existing.push(sub);
     grouped.set(source, existing);
   }
 
-  for (const [source, skills] of grouped) {
-    if (skills.length === 1) {
-      const skill = skills[0]!;
-      console.log(
-        `  ${TEXT}•${RESET} ${sanitizeMetadata(skill.name)} ${DIM}(${skill.reason})${RESET}`
-      );
+  for (const [source, subs] of grouped) {
+    if (subs.length === 1) {
+      const sub = subs[0]!;
+      console.log(`  ${TEXT}•${RESET} ${sanitizeMetadata(sub.name)} ${DIM}(${sub.reason})${RESET}`);
     } else {
-      const reason = skills[0]!.reason;
-      const names = skills.map((s) => sanitizeMetadata(s.name)).join(', ');
+      const reason = subs[0]!.reason;
+      const names = subs.map((s) => sanitizeMetadata(s.name)).join(', ');
       console.log(`  ${TEXT}•${RESET} ${names} ${DIM}(${reason})${RESET}`);
     }
-    console.log(`    ${DIM}To update: ${TEXT}npx skills add ${source} -g -y${RESET}`);
+    console.log(`    ${DIM}To update: ${TEXT}npx subagents add ${source} -g -y${RESET}`);
   }
 }
 
@@ -569,13 +540,12 @@ function printSkippedSkills(skipped: SkippedSkill[]): void {
 
 async function getProjectSkillsForUpdate(
   skillFilter?: string[]
-): Promise<Array<{ name: string; source: string; entry: LocalSkillLockEntry }>> {
+): Promise<Array<{ name: string; source: string; entry: LocalSubagentLockEntry }>> {
   const localLock = await readLocalLock();
-  const skills: Array<{ name: string; source: string; entry: LocalSkillLockEntry }> = [];
+  const skills: Array<{ name: string; source: string; entry: LocalSubagentLockEntry }> = [];
 
-  for (const [name, entry] of Object.entries(localLock.skills)) {
+  for (const [name, entry] of Object.entries(localLock.subagents)) {
     if (!matchesSkillFilter(name, skillFilter)) continue;
-    // Skip node_modules and local path skills - they are managed by sync/manually
     if (entry.sourceType === 'node_modules' || entry.sourceType === 'local') {
       continue;
     }
@@ -593,32 +563,34 @@ async function updateGlobalSkills(
   skillFilter?: string[]
 ): Promise<{ successCount: number; failCount: number; checkedCount: number }> {
   const lock = readSkillLock();
-  const skillNames = Object.keys(lock.skills);
+  const subagentNames = Object.keys(lock.subagents);
   let successCount = 0;
   let failCount = 0;
 
-  if (skillNames.length === 0) {
+  if (subagentNames.length === 0) {
     if (!skillFilter) {
-      console.log(`${DIM}No global skills tracked in lock file.${RESET}`);
-      console.log(`${DIM}Install skills with${RESET} ${TEXT}npx skills add <package> -g${RESET}`);
+      console.log(`${DIM}No global subagents tracked in lock file.${RESET}`);
+      console.log(
+        `${DIM}Install subagents with${RESET} ${TEXT}npx subagents add <package> -g${RESET}`
+      );
     }
     return { successCount, failCount, checkedCount: 0 };
   }
 
   const token = getGitHubToken();
-  const updates: Array<{ name: string; source: string; entry: SkillLockEntry }> = [];
-  const skipped: SkippedSkill[] = [];
-  const checkable: Array<{ name: string; entry: SkillLockEntry }> = [];
+  const updates: Array<{ name: string; source: string; entry: SubagentLockEntry }> = [];
+  const skipped: SkippedSubagent[] = [];
+  const checkable: Array<{ name: string; entry: SubagentLockEntry }> = [];
 
-  for (const skillName of skillNames) {
-    if (!matchesSkillFilter(skillName, skillFilter)) continue;
+  for (const subagentName of subagentNames) {
+    if (!matchesSkillFilter(subagentName, skillFilter)) continue;
 
-    const entry = lock.skills[skillName];
+    const entry = lock.subagents[subagentName];
     if (!entry) continue;
 
-    if (!entry.skillFolderHash || !entry.skillPath) {
+    if (!entry.subagentFileHash || !entry.subagentPath) {
       skipped.push({
-        name: skillName,
+        name: subagentName,
         reason: getSkipReason(entry),
         sourceUrl: entry.sourceUrl,
         sourceType: entry.sourceType,
@@ -627,27 +599,27 @@ async function updateGlobalSkills(
       continue;
     }
 
-    checkable.push({ name: skillName, entry });
+    checkable.push({ name: subagentName, entry });
   }
 
   for (let i = 0; i < checkable.length; i++) {
-    const { name: skillName, entry } = checkable[i]!;
+    const { name: subagentName, entry } = checkable[i]!;
     process.stdout.write(
-      `\r${DIM}Checking global skill ${i + 1}/${checkable.length}: ${sanitizeMetadata(skillName)}${RESET}\x1b[K`
+      `\r${DIM}Checking global subagent ${i + 1}/${checkable.length}: ${sanitizeMetadata(subagentName)}${RESET}\x1b[K`
     );
 
     try {
-      const latestHash = await fetchSkillFolderHash(
+      const latestHash = await fetchSubagentFileHash(
         entry.source,
-        entry.skillPath!,
+        entry.subagentPath!,
         token,
         entry.ref
       );
-      if (latestHash && latestHash !== entry.skillFolderHash) {
-        updates.push({ name: skillName, source: entry.source, entry });
+      if (latestHash && latestHash !== entry.subagentFileHash) {
+        updates.push({ name: subagentName, source: entry.source, entry });
       }
     } catch {
-      // Skip skills that fail to check
+      // Skip subagents that fail to check
     }
   }
 
@@ -659,7 +631,7 @@ async function updateGlobalSkills(
 
   if (checkable.length === 0 && skipped.length === 0) {
     if (!skillFilter) {
-      console.log(`${DIM}No global skills to check.${RESET}`);
+      console.log(`${DIM}No global subagents to check.${RESET}`);
     }
     return { successCount, failCount, checkedCount: 0 };
   }
@@ -670,7 +642,7 @@ async function updateGlobalSkills(
   }
 
   if (updates.length === 0) {
-    console.log(`${TEXT}✓ All global skills are up to date${RESET}`);
+    console.log(`${TEXT}✓ All global subagents are up to date${RESET}`);
     return { successCount, failCount, checkedCount };
   }
 
@@ -722,27 +694,24 @@ async function updateProjectSkills(
 
   if (projectSkills.length === 0) {
     if (!skillFilter) {
-      console.log(`${DIM}No project skills to update.${RESET}`);
+      console.log(`${DIM}No project subagents to update.${RESET}`);
       console.log(
-        `${DIM}Install project skills with${RESET} ${TEXT}npx skills add <package>${RESET}`
+        `${DIM}Install project subagents with${RESET} ${TEXT}npx subagents add <package>${RESET}`
       );
     }
     return { successCount, failCount, foundCount: 0 };
   }
 
-  // Legacy lock entries (written before skillPath was tracked) can't be updated
-  // in place — without skillPath, a reinstall would fetch every skill in the
-  // source repo. Skip them and tell the user how to refresh the lock entry.
-  const updatable = projectSkills.filter((s) => s.entry.skillPath);
-  const legacy = projectSkills.filter((s) => !s.entry.skillPath);
+  const updatable = projectSkills.filter((s) => s.entry.subagentPath);
+  const legacy = projectSkills.filter((s) => !s.entry.subagentPath);
 
   if (updatable.length === 0) {
-    console.log(`${DIM}No project skills can be updated in place.${RESET}`);
+    console.log(`${DIM}No project subagents can be updated in place.${RESET}`);
     printLegacyProjectSkills(legacy);
     return { successCount, failCount, foundCount: projectSkills.length };
   }
 
-  console.log(`${TEXT}Refreshing ${updatable.length} project skill(s)...${RESET}`);
+  console.log(`${TEXT}Refreshing ${updatable.length} project subagent(s)...${RESET}`);
   console.log();
 
   for (const skill of updatable) {
@@ -759,8 +728,6 @@ async function updateProjectSkills(
       continue;
     }
 
-    // Re-clone without -g to install at project scope
-    // Pass --skill to scope the install to just the requested skill (not the whole source repo)
     const result = spawnSync(
       process.execPath,
       [cliEntry, 'add', installUrl, '--skill', skill.name, '-y'],
@@ -785,22 +752,21 @@ async function updateProjectSkills(
 }
 
 /**
- * Print a hint for each legacy project skill entry that predates skillPath
- * tracking. Lists the manual reinstall command so the user can refresh the
- * lock entry and future updates stay scoped to a single skill.
+ * Print a hint for each legacy project subagent entry that predates subagentPath
+ * tracking.
  */
 function printLegacyProjectSkills(
-  legacy: Array<{ name: string; source: string; entry: LocalSkillLockEntry }>
+  legacy: Array<{ name: string; source: string; entry: LocalSubagentLockEntry }>
 ): void {
   if (legacy.length === 0) return;
   console.log();
   console.log(
-    `${DIM}${legacy.length} project skill(s) cannot be updated automatically (installed before skillPath tracking):${RESET}`
+    `${DIM}${legacy.length} project subagent(s) cannot be updated automatically (installed before subagentPath tracking):${RESET}`
   );
   for (const skill of legacy) {
     const reinstall = formatSourceInput(skill.entry.source, skill.entry.ref);
     console.log(`  ${TEXT}•${RESET} ${sanitizeMetadata(skill.name)}`);
-    console.log(`    ${DIM}To refresh: ${TEXT}npx skills add ${reinstall} -y${RESET}`);
+    console.log(`    ${DIM}To refresh: ${TEXT}npx subagents add ${reinstall} -y${RESET}`);
   }
 }
 
@@ -815,7 +781,7 @@ async function runUpdate(args: string[] = []): Promise<void> {
   if (options.skills) {
     console.log(`${TEXT}Updating ${options.skills.join(', ')}...${RESET}`);
   } else {
-    console.log(`${TEXT}Checking for skill updates...${RESET}`);
+    console.log(`${TEXT}Checking for subagent updates...${RESET}`);
   }
   console.log();
 
@@ -826,7 +792,7 @@ async function runUpdate(args: string[] = []): Promise<void> {
   // ---- Global update ----
   if (scope === 'global' || scope === 'both') {
     if (scope === 'both' && !options.skills) {
-      console.log(`${BOLD}Global Skills${RESET}`);
+      console.log(`${BOLD}Global Subagents${RESET}`);
     }
     const { successCount, failCount, checkedCount } = await updateGlobalSkills(options.skills);
     totalSuccess += successCount;
@@ -840,7 +806,7 @@ async function runUpdate(args: string[] = []): Promise<void> {
   // ---- Project update ----
   if (scope === 'project' || scope === 'both') {
     if (scope === 'both' && !options.skills) {
-      console.log(`${BOLD}Project Skills${RESET}`);
+      console.log(`${BOLD}Project Subagents${RESET}`);
     }
     const { successCount, failCount, foundCount } = await updateProjectSkills(options.skills);
     totalSuccess += successCount;
@@ -850,15 +816,17 @@ async function runUpdate(args: string[] = []): Promise<void> {
 
   // If filtering by name and nothing was found anywhere, tell the user
   if (options.skills && totalFound === 0) {
-    console.log(`${DIM}No installed skills found matching: ${options.skills.join(', ')}${RESET}`);
+    console.log(
+      `${DIM}No installed subagents found matching: ${options.skills.join(', ')}${RESET}`
+    );
   }
 
   console.log();
   if (totalSuccess > 0) {
-    console.log(`${TEXT}✓ Updated ${totalSuccess} skill(s)${RESET}`);
+    console.log(`${TEXT}✓ Updated ${totalSuccess} subagent(s)${RESET}`);
   }
   if (totalFail > 0) {
-    console.log(`${DIM}Failed to update ${totalFail} skill(s)${RESET}`);
+    console.log(`${DIM}Failed to update ${totalFail} subagent(s)${RESET}`);
   }
   if (totalSuccess === 0 && totalFail === 0) {
     // No updates found/attempted - the sub-functions already printed their messages
@@ -956,7 +924,7 @@ async function main(): Promise<void> {
 
     default:
       console.log(`Unknown command: ${command}`);
-      console.log(`Run ${BOLD}skills --help${RESET} for usage.`);
+      console.log(`Run ${BOLD}subagents --help${RESET} for usage.`);
   }
 }
 
