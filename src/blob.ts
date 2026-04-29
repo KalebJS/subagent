@@ -150,7 +150,6 @@ export function getSkillFolderHashFromTree(tree: RepoTree, subagentPath: string)
 
 /** Known directories where subagent .md files are commonly found (relative to repo root) */
 const PRIORITY_PREFIXES = [
-  '',
   'agents/',
   'subagents/',
   'droids/',
@@ -164,6 +163,7 @@ const PRIORITY_PREFIXES = [
 
 /**
  * Find all .md subagent files in a repo tree that have frontmatter.
+ * Only searches within known priority directories — no root-level or fallback scanning.
  * If subpath is set, only searches within that subtree.
  */
 export function findSubagentMdPaths(tree: RepoTree, subpath?: string): string[] {
@@ -178,7 +178,7 @@ export function findSubagentMdPaths(tree: RepoTree, subpath?: string): string[] 
 
   if (filtered.length === 0) return [];
 
-  // Check priority directories first
+  // Check priority directories only
   const priorityResults: string[] = [];
   const seen = new Set<string>();
 
@@ -193,13 +193,7 @@ export function findSubagentMdPaths(tree: RepoTree, subpath?: string): string[] 
     }
   }
 
-  if (priorityResults.length > 0) return priorityResults;
-
-  // Fallback: return all .md files found (limited to 5 levels deep)
-  return filtered.filter((p) => {
-    const depth = p.split('/').length;
-    return depth <= 6;
-  });
+  return priorityResults;
 }
 
 // ─── Fetching skill content ───

@@ -4,8 +4,6 @@ import { parseFrontmatter } from './frontmatter.ts';
 import { sanitizeMetadata } from './sanitize.ts';
 import type { Subagent } from './types.ts';
 
-const SKIP_DIRS = ['node_modules', '.git', 'dist', 'build', '__pycache__'];
-
 export function shouldInstallInternalSubagents(): boolean {
   const envValue = process.env.INSTALL_INTERNAL_SUBAGENTS;
   return envValue === '1' || envValue === 'true';
@@ -61,31 +59,6 @@ export async function parseSubagentMd(
   }
 }
 
-/**
- * Scan a directory for *.md files that are valid subagent definitions.
- */
-async function findSubagentMds(dir: string, depth = 0, maxDepth = 3): Promise<string[]> {
-  if (depth > maxDepth) return [];
-
-  try {
-    const entries = await readdir(dir, { withFileTypes: true });
-    const mdFiles: string[] = [];
-
-    for (const entry of entries) {
-      if (entry.isDirectory() && !SKIP_DIRS.includes(entry.name)) {
-        const sub = await findSubagentMds(join(dir, entry.name), depth + 1, maxDepth);
-        mdFiles.push(...sub);
-      } else if (entry.isFile() && entry.name.endsWith('.md')) {
-        mdFiles.push(join(dir, entry.name));
-      }
-    }
-
-    return mdFiles;
-  } catch {
-    return [];
-  }
-}
-
 export interface DiscoverSubagentsOptions {
   includeInternal?: boolean;
 }
@@ -94,11 +67,11 @@ export interface DiscoverSubagentsOptions {
  * Discover subagent .md files in a cloned/local repo.
  *
  * Search order:
- * 1. Common subagent collection directories (agents/, subagents/, droids/)
- * 2. Agent-specific directories (.claude/agents/, .codex/agents/, etc.)
- * 3. Repo root (for single-subagent repos)
- * 4. Recursive fallback if nothing found
+ * 1. Priority directories — common collection dirs (agents/, subagents/, droids/)
+ *    and agent-specific dirs (.claude/agents/, .codex/agents/, etc.)
+ * 2. Subpath .md file (when subpath points directly at a .md file)
  *
+ * No fallback to root-level or recursive scanning.
  * Any .md file with name + description frontmatter is accepted.
  */
 export async function discoverSubagents(
@@ -135,7 +108,7 @@ export async function discoverSubagents(
     }
   }
 
-  // Priority search dirs — common subagent collection conventions
+  // Priority search dirs — common subagent collection conventions + agent-specific dirs
   const priorityDirs = [
     join(searchPath, 'agents'),
     join(searchPath, 'subagents'),
@@ -153,17 +126,6 @@ export async function discoverSubagents(
   // If pointing at a specific .md file via subpath
   if (subpath && subpath.endsWith('.md')) {
     await tryFile(searchPath);
-  }
-
-  // Try root-level .md files (single-subagent repos)
-  if (subagents.length === 0) {
-    await tryDir(searchPath);
-  }
-
-  // Recursive fallback
-  if (subagents.length === 0) {
-    const allMds = await findSubagentMds(searchPath);
-    await Promise.all(allMds.map(tryFile));
   }
 
   return subagents;
