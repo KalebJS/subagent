@@ -1,5 +1,5 @@
 {
-  "name": "subagents",
+  "name": "@superkut/subagents",
   "version": "0.1.0",
   "description": "CLI for installing cross-agent subagent definitions from git repos, URLs, or local paths",
   "type": "module",
@@ -24,6 +24,8 @@
     "prepare": "husky",
     "test": "vitest",
     "type-check": "tsc --noEmit",
+    "commit": "cz",
+    "release": "cz bump",
     "publish:snapshot": "npm version prerelease --preid=snapshot --no-git-tag-version && npm publish --tag snapshot"
   },
   "lint-staged": {
@@ -57,6 +59,8 @@
     "@clack/prompts": "^0.11.0",
     "@types/bun": "latest",
     "@types/node": "^22.10.0",
+    "commitizen": "^4.3.1",
+    "cz-conventional-changelog": "^3.3.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
     "obuild": "^0.4.22",
@@ -73,5 +77,10 @@
   "packageManager": "pnpm@10.17.1",
   "dependencies": {
     "yaml": "^2.8.3"
+  },
+  "config": {
+    "commitizen": {
+      "path": "cz-conventional-changelog"
+    }
   }
 }
