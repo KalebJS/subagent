@@ -284,16 +284,16 @@ describe('parseAddOptions', () => {
     expect(result.options.yes).toBe(true);
   });
 
-  it('should parse --full-depth flag', () => {
-    const result = parseAddOptions(['source', '--full-depth']);
+  it('should parse --search-dir flag', () => {
+    const result = parseAddOptions(['source', '--search-dir', 'my-dir']);
     expect(result.source).toEqual(['source']);
-    expect(result.options.fullDepth).toBe(true);
+    expect(result.options.searchDir).toBe('my-dir');
   });
 
-  it('should parse --full-depth with other flags', () => {
-    const result = parseAddOptions(['source', '--full-depth', '--list', '-g']);
+  it('should parse --search-dir with other flags', () => {
+    const result = parseAddOptions(['source', '--search-dir', 'custom/agents', '--list', '-g']);
     expect(result.source).toEqual(['source']);
-    expect(result.options.fullDepth).toBe(true);
+    expect(result.options.searchDir).toBe('custom/agents');
     expect(result.options.list).toBe(true);
     expect(result.options.global).toBe(true);
   });

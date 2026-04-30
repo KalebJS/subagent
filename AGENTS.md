@@ -25,30 +25,30 @@ Discovery scans for any `*.md` file containing `name` + `description` frontmatte
 
 ## Supported Agents (v1)
 
-| Agent           | Project Dir           | Global Dir                               |
-| --------------- | --------------------- | ---------------------------------------- |
-| Claude Code     | `.claude/agents/`     | `~/.claude/agents/`                      |
-| Factory (Droid) | `.factory/droids/`   | `~/.factory/droids/`                     |
-| Codex CLI       | `.codex/agents/`     | `~/.codex/agents/`                       |
-| OpenCode        | `.opencode/agents/`   | `~/.config/opencode/agents/`             |
-| Cursor          | `.cursor/agents/`     | `~/.cursor/agents/`                      |
-| Amp             | `.agents/agents/`     | `~/.config/agents/agents/`               |
+| Agent           | Project Dir         | Global Dir                   |
+| --------------- | ------------------- | ---------------------------- |
+| Claude Code     | `.claude/agents/`   | `~/.claude/agents/`          |
+| Factory (Droid) | `.factory/droids/`  | `~/.factory/droids/`         |
+| Codex CLI       | `.codex/agents/`    | `~/.codex/agents/`           |
+| OpenCode        | `.opencode/agents/` | `~/.config/opencode/agents/` |
+| Cursor          | `.cursor/agents/`   | `~/.cursor/agents/`          |
+| Amp             | `.agents/agents/`   | `~/.config/agents/agents/`   |
 
 Only agents with documented subagent install paths are included. Adding more requires evidence of an upstream-documented path.
 
 ## Commands
 
-| Command                        | Description                                          |
-| ------------------------------ | ---------------------------------------------------- |
-| `subagents`                    | Show banner with available commands                  |
-| `subagents add <pkg>`          | Install subagents from git repos, URLs, or local paths |
-| `subagents experimental_install` | Restore subagents from subagents-lock.json         |
-| `subagents experimental_sync`  | Sync subagents from node_modules into agent dirs    |
-| `subagents list`               | List installed subagents (alias: `ls`)              |
-| `subagents update [names...]`  | Update subagents to latest versions                  |
-| `subagents find <query>`       | Search for subagents in remote collections          |
-| `subagents remove <name>`     | Remove an installed subagent                        |
-| `subagents init [name]`       | Create a new AGENT.md template                      |
+| Command                          | Description                                            |
+| -------------------------------- | ------------------------------------------------------ |
+| `subagents`                      | Show banner with available commands                    |
+| `subagents add <pkg>`            | Install subagents from git repos, URLs, or local paths |
+| `subagents experimental_install` | Restore subagents from subagents-lock.json             |
+| `subagents experimental_sync`    | Sync subagents from node_modules into agent dirs       |
+| `subagents list`                 | List installed subagents (alias: `ls`)                 |
+| `subagents update [names...]`    | Update subagents to latest versions                    |
+| `subagents find <query>`         | Search for subagents in remote collections             |
+| `subagents remove <name>`        | Remove an installed subagent                           |
+| `subagents init [name]`          | Create a new AGENT.md template                         |
 
 Aliases: `subagents a` for `add`. `subagents i` / `subagents install` (no args) restores from `subagents-lock.json`. `subagents ls` for `list`.
 
@@ -101,7 +101,7 @@ src/
 tests/
 ├── cross-platform-paths.test.ts     # Path normalization across platforms
 ├── dist.test.ts                     # Tests for built distribution
-├── full-depth-discovery.test.ts     # --full-depth subagent discovery tests
+├── search-dir-discovery.test.ts      # --search-dir recursive discovery tests
 ├── installer-copy.test.ts           # Tests for copy installation
 ├── installer-symlink.test.ts        # Tests for symlink installation
 ├── list-installed.test.ts           # Tests for listing installed subagents
@@ -124,16 +124,16 @@ tests/
 
 ### Key Terminology Mapping (skills → subagents)
 
-| Skills (old)                     | Subagents (new)                       |
-| -------------------------------- | ------------------------------------- |
-| `SKILL.md`                       | Any `*.md` with `name`+`description` frontmatter |
-| `Skill` type                     | `Subagent` type                       |
-| `AgentConfig.skillsDir`          | `AgentConfig.agentsDir`               |
-| `AgentConfig.globalSkillsDir`    | `AgentConfig.globalAgentsDir`          |
-| `discoverSkills()`               | `discoverSubagents()`                 |
-| `skillFolderHash`                | `subagentFileHash` (per-file SHA-256)  |
-| `skills-lock.json`               | `subagents-lock.json`                 |
-| `~/.agents/.skill-lock.json`     | `~/.agents/.subagent-lock.json`       |
+| Skills (old)                  | Subagents (new)                                  |
+| ----------------------------- | ------------------------------------------------ |
+| `SKILL.md`                    | Any `*.md` with `name`+`description` frontmatter |
+| `Skill` type                  | `Subagent` type                                  |
+| `AgentConfig.skillsDir`       | `AgentConfig.agentsDir`                          |
+| `AgentConfig.globalSkillsDir` | `AgentConfig.globalAgentsDir`                    |
+| `discoverSkills()`            | `discoverSubagents()`                            |
+| `skillFolderHash`             | `subagentFileHash` (per-file SHA-256)            |
+| `skills-lock.json`            | `subagents-lock.json`                            |
+| `~/.agents/.skill-lock.json`  | `~/.agents/.subagent-lock.json`                  |
 
 ## Update Checking System
 
@@ -155,17 +155,17 @@ If reading an older lock file version, it's wiped. Users must reinstall subagent
 
 ## Key Integration Points
 
-| Feature                        | Implementation                                                      |
-| ------------------------------ | ------------------------------------------------------------------- |
-| `subagents add`                | `src/add.ts` - full implementation                                   |
-| `subagents experimental_sync`  | `src/sync.ts` - crawl node_modules                                   |
-| `subagents find`               | `src/find.ts` - search remote collections                            |
-| `subagents check`              | `src/cli.ts` + `fetchSubagentFileHash` in `src/skill-lock.ts`       |
-| `subagents update`             | `src/cli.ts` direct hash compare + reinstall via `subagents add`     |
-| `subagents remove`            | `src/remove.ts` - removes file + lock entries                        |
-| Subagent discovery             | `src/subagents.ts` - `discoverSubagents()` scans `*.md` + frontmatter|
-| Frontmatter parsing            | `src/frontmatter.ts` + `src/sanitize.ts`                            |
-| Source parsing (`@agent-name`)  | `src/source-parser.ts` - supports `owner/repo@agent-name` syntax    |
+| Feature                        | Implementation                                                                                                      |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| `subagents add`                | `src/add.ts` - full implementation                                                                                  |
+| `subagents experimental_sync`  | `src/sync.ts` - crawl node_modules                                                                                  |
+| `subagents find`               | `src/find.ts` - search remote collections                                                                           |
+| `subagents check`              | `src/cli.ts` + `fetchSubagentFileHash` in `src/skill-lock.ts`                                                       |
+| `subagents update`             | `src/cli.ts` direct hash compare + reinstall via `subagents add`                                                    |
+| `subagents remove`             | `src/remove.ts` - removes file + lock entries                                                                       |
+| Subagent discovery             | `src/subagents.ts` - `discoverSubagents()` scans `*.md` + frontmatter; supports `--search-dir` for recursive search |
+| Frontmatter parsing            | `src/frontmatter.ts` + `src/sanitize.ts`                                                                            |
+| Source parsing (`@agent-name`) | `src/source-parser.ts` - supports `owner/repo@agent-name` syntax                                                    |
 
 ## Development
 
@@ -226,5 +226,5 @@ CI will fail if code is not properly formatted.
 - **Agent registry, v1:** Core 6 only (`claude-code`, `factory`, `codex`, `opencode`, `cursor`, `amp`). Add more only when their subagent path is documented upstream.
 - **Translation:** Install verbatim. No per-target frontmatter transformer in v1. Revisit only if a target rejects a real subagent.
 - **File extension:** `.md` — installed as-is, no rename.
-- **Discovery:** Any `*.md` with `name` + `description` YAML frontmatter. Not a fixed filename like `SKILL.md`.
+- **Discovery:** Priority dirs first (agents/, subagents/, droids/, .claude/agents/, etc.), then optional `--search-dir <dir>` for recursive search. Any `*.md` with `name` + `description` YAML frontmatter. Not a fixed filename like `SKILL.md`.
 - **Hashing:** Per-file SHA-256 (subagents are single files), not per-folder tree SHA.

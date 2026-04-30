@@ -309,7 +309,7 @@ export interface AddOptions {
   skill?: string[];
   list?: boolean;
   all?: boolean;
-  fullDepth?: boolean;
+  searchDir?: string;
   copy?: boolean;
 }
 
@@ -408,14 +408,20 @@ export async function runAdd(args: string[], options: AddOptions = {}): Promise<
       spinner.stop('Local path validated');
 
       spinner.start('Discovering subagents...');
-      subagents = await discoverSubagents(parsed.localPath!, parsed.subpath, { includeInternal });
+      subagents = await discoverSubagents(parsed.localPath!, parsed.subpath, {
+        includeInternal,
+        searchDir: options.searchDir,
+      });
     } else {
       spinner.start('Cloning repository...');
       tempDir = await cloneRepo(parsed.url, parsed.ref);
       spinner.stop('Repository cloned');
 
       spinner.start('Discovering subagents...');
-      subagents = await discoverSubagents(tempDir, parsed.subpath, { includeInternal });
+      subagents = await discoverSubagents(tempDir, parsed.subpath, {
+        includeInternal,
+        searchDir: options.searchDir,
+      });
     }
 
     if (subagents.length === 0) {
@@ -1030,8 +1036,12 @@ export function parseAddOptions(args: string[]): { source: string[]; options: Ad
         nextArg = args[i];
       }
       i--; // Back up one since the loop will increment
-    } else if (arg === '--full-depth') {
-      options.fullDepth = true;
+    } else if (arg === '--search-dir') {
+      i++;
+      const dir = args[i];
+      if (dir && !dir.startsWith('-')) {
+        options.searchDir = dir;
+      }
     } else if (arg === '--copy') {
       options.copy = true;
     } else if (arg && !arg.startsWith('-')) {

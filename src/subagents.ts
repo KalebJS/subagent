@@ -1,8 +1,11 @@
-import { readdir, readFile } from 'fs/promises';
+import { readdir, readFile, stat } from 'fs/promises';
 import { join, normalize, resolve, sep } from 'path';
 import { parseFrontmatter } from './frontmatter.ts';
 import { sanitizeMetadata } from './sanitize.ts';
 import type { Subagent } from './types.ts';
+
+const SKIP_DIRS = ['node_modules', '.git', 'dist', 'build', '__pycache__'];
+const MAX_RECURSION_DEPTH = 5;
 
 export function shouldInstallInternalSubagents(): boolean {
   const envValue = process.env.INSTALL_INTERNAL_SUBAGENTS;
@@ -59,8 +62,39 @@ export async function parseSubagentMd(
   }
 }
 
+/**
+ * Recursively walk a directory, collecting all .md file paths.
+ * Skips SKIP_DIRS and respects MAX_RECURSION_DEPTH.
+ */
+async function findMdFiles(dir: string, depth = 0): Promise<string[]> {
+  if (depth > MAX_RECURSION_DEPTH) return [];
+
+  let entries;
+  try {
+    entries = await readdir(dir, { withFileTypes: true });
+  } catch {
+    return [];
+  }
+
+  const files: string[] = [];
+  const subDirs: string[] = [];
+
+  for (const entry of entries) {
+    if (entry.isFile() && entry.name.endsWith('.md')) {
+      files.push(join(dir, entry.name));
+    } else if (entry.isDirectory() && !SKIP_DIRS.includes(entry.name)) {
+      subDirs.push(join(dir, entry.name));
+    }
+  }
+
+  const subResults = await Promise.all(subDirs.map((d) => findMdFiles(d, depth + 1)));
+  return [...files, ...subResults.flat()];
+}
+
 export interface DiscoverSubagentsOptions {
   includeInternal?: boolean;
+  /** Directory to recursively search for .md files (relative to searchPath). */
+  searchDir?: string;
 }
 
 /**
@@ -70,9 +104,11 @@ export interface DiscoverSubagentsOptions {
  * 1. Priority directories — common collection dirs (agents/, subagents/, droids/)
  *    and agent-specific dirs (.claude/agents/, .codex/agents/, etc.)
  * 2. Subpath .md file (when subpath points directly at a .md file)
+ * 3. Recursive search (when searchDir is provided) — walks the specified
+ *    directory tree for .md files with valid frontmatter
  *
- * No fallback to root-level or recursive scanning.
  * Any .md file with name + description frontmatter is accepted.
+ * Duplicates by name are resolved in priority order: earlier matches win.
  */
 export async function discoverSubagents(
   basePath: string,
@@ -108,7 +144,7 @@ export async function discoverSubagents(
     }
   }
 
-  // Priority search dirs — common subagent collection conventions + agent-specific dirs
+  // 1. Priority search dirs — common subagent collection conventions + agent-specific dirs
   const priorityDirs = [
     join(searchPath, 'agents'),
     join(searchPath, 'subagents'),
@@ -123,9 +159,33 @@ export async function discoverSubagents(
 
   await Promise.all(priorityDirs.map(tryDir));
 
-  // If pointing at a specific .md file via subpath
+  // 2. If pointing at a specific .md file via subpath
   if (subpath && subpath.endsWith('.md')) {
     await tryFile(searchPath);
+  }
+
+  // 3. Recursive search when searchDir is provided
+  if (options?.searchDir) {
+    const recursiveDir = join(searchPath, options.searchDir);
+
+    // Validate searchDir stays within basePath
+    const normalizedBase = normalize(resolve(basePath));
+    const normalizedTarget = normalize(resolve(recursiveDir));
+    if (!normalizedTarget.startsWith(normalizedBase + sep) && normalizedTarget !== normalizedBase) {
+      throw new Error(
+        `Invalid --search-dir: "${options.searchDir}" resolves outside the repository directory.`
+      );
+    }
+
+    try {
+      const dirStat = await stat(recursiveDir);
+      if (dirStat.isDirectory()) {
+        const mdFiles = await findMdFiles(recursiveDir);
+        await Promise.all(mdFiles.map(tryFile));
+      }
+    } catch {
+      // searchDir doesn't exist — skip silently
+    }
   }
 
   return subagents;

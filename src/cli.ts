@@ -138,7 +138,7 @@ ${BOLD}Add Options:${RESET}
   -y, --yes              Skip confirmation prompts
   --copy                 Copy files instead of symlinking to agent directories
   --all                  Shorthand for --skill '*' --agent '*' -y
-  --full-depth           Search all subdirectories
+  --search-dir <dir>   Recursively search a directory for .md subagent files
 
 ${BOLD}Remove Options:${RESET}
   -g, --global           Remove from global scope
