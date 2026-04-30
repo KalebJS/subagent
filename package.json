@@ -1,6 +1,6 @@
 {
   "name": "@superkut/subagents",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "CLI for installing cross-agent subagent definitions from git repos, URLs, or local paths",
   "type": "module",
   "bin": {
