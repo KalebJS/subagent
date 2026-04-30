@@ -292,7 +292,7 @@ description: A test subagent for listing
   describe('banner', () => {
     it('should include list command in banner', () => {
       const result = runCli([]);
-      expect(result.stdout).toContain('npx get-subagents list');
+      expect(result.stdout).toContain('npx @superkut/get-subagents list');
       expect(result.stdout).toContain('List installed subagents');
     });
   });

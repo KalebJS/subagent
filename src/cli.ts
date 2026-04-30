@@ -75,33 +75,35 @@ function showBanner(): void {
   console.log(`${DIM}The open subagent ecosystem${RESET}`);
   console.log();
   console.log(
-    `  ${DIM}$${RESET} ${TEXT}npx get-subagents add ${DIM}<package>${RESET}        ${DIM}Add a new subagent${RESET}`
+    `  ${DIM}$${RESET} ${TEXT}npx @superkut/get-subagents add ${DIM}<package>${RESET}        ${DIM}Add a new subagent${RESET}`
   );
   console.log(
-    `  ${DIM}$${RESET} ${TEXT}npx get-subagents remove${RESET}               ${DIM}Remove installed subagents${RESET}`
+    `  ${DIM}$${RESET} ${TEXT}npx @superkut/get-subagents remove${RESET}               ${DIM}Remove installed subagents${RESET}`
   );
   console.log(
-    `  ${DIM}$${RESET} ${TEXT}npx get-subagents list${RESET}                 ${DIM}List installed subagents${RESET}`
+    `  ${DIM}$${RESET} ${TEXT}npx @superkut/get-subagents list${RESET}                 ${DIM}List installed subagents${RESET}`
   );
   console.log(
-    `  ${DIM}$${RESET} ${TEXT}npx get-subagents find ${DIM}[query]${RESET}         ${DIM}Search for subagents${RESET}`
+    `  ${DIM}$${RESET} ${TEXT}npx @superkut/get-subagents find ${DIM}[query]${RESET}         ${DIM}Search for subagents${RESET}`
   );
   console.log();
   console.log(
-    `  ${DIM}$${RESET} ${TEXT}npx get-subagents update${RESET}               ${DIM}Update installed subagents${RESET}`
+    `  ${DIM}$${RESET} ${TEXT}npx @superkut/get-subagents update${RESET}               ${DIM}Update installed subagents${RESET}`
   );
   console.log();
   console.log(
-    `  ${DIM}$${RESET} ${TEXT}npx get-subagents experimental_install${RESET} ${DIM}Restore from subagents-lock.json${RESET}`
+    `  ${DIM}$${RESET} ${TEXT}npx @superkut/get-subagents experimental_install${RESET} ${DIM}Restore from subagents-lock.json${RESET}`
   );
   console.log(
-    `  ${DIM}$${RESET} ${TEXT}npx get-subagents init ${DIM}[name]${RESET}          ${DIM}Create a new subagent${RESET}`
+    `  ${DIM}$${RESET} ${TEXT}npx @superkut/get-subagents init ${DIM}[name]${RESET}          ${DIM}Create a new subagent${RESET}`
   );
   console.log(
-    `  ${DIM}$${RESET} ${TEXT}npx get-subagents experimental_sync${RESET}    ${DIM}Sync subagents from node_modules${RESET}`
+    `  ${DIM}$${RESET} ${TEXT}npx @superkut/get-subagents experimental_sync${RESET}    ${DIM}Sync subagents from node_modules${RESET}`
   );
   console.log();
-  console.log(`${DIM}try:${RESET} npx get-subagents add VoltAgent/awesome-claude-code-subagents`);
+  console.log(
+    `${DIM}try:${RESET} npx @superkut/get-subagents add VoltAgent/awesome-claude-code-subagents`
+  );
   console.log();
 }
 
@@ -262,10 +264,10 @@ Describe when this subagent should be used.
   console.log();
   console.log(`${DIM}Publishing:${RESET}`);
   console.log(
-    `  ${DIM}GitHub:${RESET}  Push to a repo, then ${TEXT}npx get-subagents add <owner>/<repo>${RESET}`
+    `  ${DIM}GitHub:${RESET}  Push to a repo, then ${TEXT}npx @superkut/get-subagents add <owner>/<repo>${RESET}`
   );
   console.log(
-    `  ${DIM}URL:${RESET}     Host the file, then ${TEXT}npx get-subagents add https://example.com/${displayPath}${RESET}`
+    `  ${DIM}URL:${RESET}     Host the file, then ${TEXT}npx @superkut/get-subagents add https://example.com/${displayPath}${RESET}`
   );
   console.log();
 }
@@ -530,7 +532,9 @@ function printSkippedSkills(skipped: SkippedSubagent[]): void {
       const names = subs.map((s) => sanitizeMetadata(s.name)).join(', ');
       console.log(`  ${TEXT}•${RESET} ${names} ${DIM}(${reason})${RESET}`);
     }
-    console.log(`    ${DIM}To update: ${TEXT}npx get-subagents add ${source} -g -y${RESET}`);
+    console.log(
+      `    ${DIM}To update: ${TEXT}npx @superkut/get-subagents add ${source} -g -y${RESET}`
+    );
   }
 }
 
@@ -571,7 +575,7 @@ async function updateGlobalSkills(
     if (!skillFilter) {
       console.log(`${DIM}No global subagents tracked in lock file.${RESET}`);
       console.log(
-        `${DIM}Install subagents with${RESET} ${TEXT}npx get-subagents add <package> -g${RESET}`
+        `${DIM}Install subagents with${RESET} ${TEXT}npx @superkut/get-subagents add <package> -g${RESET}`
       );
     }
     return { successCount, failCount, checkedCount: 0 };
@@ -696,7 +700,7 @@ async function updateProjectSkills(
     if (!skillFilter) {
       console.log(`${DIM}No project subagents to update.${RESET}`);
       console.log(
-        `${DIM}Install project subagents with${RESET} ${TEXT}npx get-subagents add <package>${RESET}`
+        `${DIM}Install project subagents with${RESET} ${TEXT}npx @superkut/get-subagents add <package>${RESET}`
       );
     }
     return { successCount, failCount, foundCount: 0 };
@@ -766,7 +770,9 @@ function printLegacyProjectSkills(
   for (const skill of legacy) {
     const reinstall = formatSourceInput(skill.entry.source, skill.entry.ref);
     console.log(`  ${TEXT}•${RESET} ${sanitizeMetadata(skill.name)}`);
-    console.log(`    ${DIM}To refresh: ${TEXT}npx get-subagents add ${reinstall} -y${RESET}`);
+    console.log(
+      `    ${DIM}To refresh: ${TEXT}npx @superkut/get-subagents add ${reinstall} -y${RESET}`
+    );
   }
 }
 

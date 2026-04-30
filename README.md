@@ -9,32 +9,32 @@ Supports **OpenCode**, **Claude Code**, **Codex**, **Cursor**, and [2 more](#sup
 ## Install a Subagent
 
 ```bash
-npx get-subagents add VoltAgent/awesome-claude-code-subagents
+npx @superkut/get-subagents add VoltAgent/awesome-claude-code-subagents
 ```
 
 ### Source Formats
 
 ```bash
 # GitHub shorthand (owner/repo)
-npx get-subagents add VoltAgent/awesome-claude-code-subagents
+npx @superkut/get-subagents add VoltAgent/awesome-claude-code-subagents
 
 # Full GitHub URL
-npx get-subagents add https://github.com/VoltAgent/awesome-claude-code-subagents
+npx @superkut/get-subagents add https://github.com/VoltAgent/awesome-claude-code-subagents
 
 # Direct path to a subagent in a repo
-npx get-subagents add https://github.com/owner/repo/tree/main/agents/my-subagent
+npx @superkut/get-subagents add https://github.com/owner/repo/tree/main/agents/my-subagent
 
 # GitLab URL
-npx get-subagents add https://gitlab.com/org/repo
+npx @superkut/get-subagents add https://gitlab.com/org/repo
 
 # Any git URL
-npx get-subagents add git@github.com:owner/repo.git
+npx @superkut/get-subagents add git@github.com:owner/repo.git
 
 # Local path
-npx get-subagents add ./my-local-subagents
+npx @superkut/get-subagents add ./my-local-subagents
 
 # Install a specific subagent by name
-npx get-subagents add owner/repo@subagent-name
+npx @superkut/get-subagents add owner/repo@subagent-name
 ```
 
 ### Options
@@ -94,11 +94,11 @@ When installing interactively, you can choose:
 
 | Command                      | Description                                        |
 | ---------------------------- | -------------------------------------------------- |
-| `npx get-subagents list`         | List installed subagents (alias: `ls`)             |
-| `npx get-subagents find [query]` | Search for subagents interactively or by keyword |
-| `npx get-subagents remove [name]` | Remove installed subagents from agents           |
-| `npx get-subagents update [names]` | Update installed subagents to latest versions    |
-| `npx get-subagents init [name]` | Create a new AGENT.md template                    |
+| `npx @superkut/get-subagents list`         | List installed subagents (alias: `ls`)             |
+| `npx @superkut/get-subagents find [query]` | Search for subagents interactively or by keyword |
+| `npx @superkut/get-subagents remove [name]` | Remove installed subagents from agents           |
+| `npx @superkut/get-subagents update [names]` | Update installed subagents to latest versions    |
+| `npx @superkut/get-subagents init [name]` | Create a new AGENT.md template                    |
 
 ### `get-subagents list`
 
@@ -331,10 +331,10 @@ Ensure you have write access to the target directory.
 
 ```bash
 # Install internal subagents
-INSTALL_INTERNAL_SKILLS=1 npx get-subagents add owner/repo --list
+INSTALL_INTERNAL_SKILLS=1 npx @superkut/get-subagents add owner/repo --list
 
 # Use a GitHub token for higher rate limits
-GITHUB_TOKEN=ghp_xxx npx get-subagents add owner/repo
+GITHUB_TOKEN=ghp_xxx npx @superkut/get-subagents add owner/repo
 ```
 
 ## Telemetry

@@ -47,9 +47,9 @@ describe('get-subagents CLI', () => {
     it('should display banner', () => {
       const output = stripLogo(runCliOutput([]));
       expect(output).toContain('The open subagent ecosystem');
-      expect(output).toContain('npx get-subagents add');
-      expect(output).toContain('npx get-subagents update');
-      expect(output).toContain('npx get-subagents init');
+      expect(output).toContain('npx @superkut/get-subagents add');
+      expect(output).toContain('npx @superkut/get-subagents update');
+      expect(output).toContain('npx @superkut/get-subagents init');
     });
   });
 
