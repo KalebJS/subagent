@@ -1,6 +1,6 @@
 {
   "name": "@superkut/subagents",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "CLI for installing cross-agent subagent definitions from git repos, URLs, or local paths",
   "type": "module",
   "bin": {
@@ -47,11 +47,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kalebsmith/subagents.git"
+    "url": "git+https://github.com/KalebJS/subagents.git"
   },
-  "homepage": "https://github.com/kalebsmith/subagents#readme",
+  "homepage": "https://github.com/KalebJS/subagents#readme",
   "bugs": {
-    "url": "https://github.com/kalebsmith/subagents/issues"
+    "url": "https://github.com/KalebJS/subagents/issues"
   },
   "author": "",
   "license": "MIT",
