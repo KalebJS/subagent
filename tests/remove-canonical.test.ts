@@ -18,7 +18,7 @@ describe('removeCommand canonical protection', () => {
   let oldCwd: string;
 
   beforeEach(async () => {
-    tempDir = await resolve(join(tmpdir(), 'subagents-remove-test-' + Date.now()));
+    tempDir = await resolve(join(tmpdir(), 'get-subagents-remove-test-' + Date.now()));
     await mkdir(tempDir, { recursive: true });
     oldCwd = process.cwd();
     process.chdir(tempDir);

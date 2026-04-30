@@ -271,8 +271,8 @@ export async function runFind(args: string[]): Promise<void> {
   const query = args.join(' ');
   const isNonInteractive = !process.stdin.isTTY;
   const agentTip = `${DIM}Tip: if running in a coding agent, follow these steps:${RESET}
-${DIM}  1) npx subagents find [query]${RESET}
-${DIM}  2) npx subagents add <owner/repo@agent-name>${RESET}`;
+${DIM}  1) npx get-subagents find [query]${RESET}
+${DIM}  2) npx get-subagents add <owner/repo@agent-name>${RESET}`;
 
   // Non-interactive mode: just print results and exit
   if (query) {
@@ -290,7 +290,7 @@ ${DIM}  2) npx subagents add <owner/repo@agent-name>${RESET}`;
       return;
     }
 
-    console.log(`${DIM}Install with${RESET} npx subagents add <owner/repo@agent-name>`);
+    console.log(`${DIM}Install with${RESET} npx get-subagents add <owner/repo@agent-name>`);
     console.log();
 
     for (const skill of results.slice(0, 6)) {

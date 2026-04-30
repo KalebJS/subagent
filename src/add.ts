@@ -338,12 +338,12 @@ export async function runAdd(args: string[], options: AddOptions = {}): Promise<
     console.log();
     console.log(pc.dim('  Usage:'));
     console.log(
-      `    ${pc.cyan('npx subagents add')} ${pc.yellow('<source>')} ${pc.dim('[options]')}`
+      `    ${pc.cyan('npx get-subagents add')} ${pc.yellow('<source>')} ${pc.dim('[options]')}`
     );
     console.log();
     console.log(pc.dim('  Example:'));
     console.log(
-      `    ${pc.cyan('npx subagents add')} ${pc.yellow('VoltAgent/awesome-claude-code-subagents')}`
+      `    ${pc.cyan('npx get-subagents add')} ${pc.yellow('VoltAgent/awesome-claude-code-subagents')}`
     );
     console.log();
     process.exit(1);
@@ -357,7 +357,7 @@ export async function runAdd(args: string[], options: AddOptions = {}): Promise<
   }
 
   console.log();
-  p.intro(pc.bgCyan(pc.black(' subagents ')));
+  p.intro(pc.bgCyan(pc.black(' get-subagents ')));
 
   if (!process.stdin.isTTY) {
     showInstallTip();

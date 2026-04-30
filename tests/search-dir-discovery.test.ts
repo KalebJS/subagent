@@ -16,7 +16,7 @@ describe('discoverSubagents with searchDir option', () => {
   let testDir: string;
 
   beforeEach(() => {
-    testDir = join(tmpdir(), `subagents-search-dir-test-${Date.now()}`);
+    testDir = join(tmpdir(), `get-subagents-search-dir-test-${Date.now()}`);
     mkdirSync(testDir, { recursive: true });
   });
 

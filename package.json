@@ -1,11 +1,12 @@
 {
-  "name": "@superkut/subagents",
+  "name": "@superkut/get-subagents",
   "version": "0.4.0",
   "description": "CLI for installing cross-agent subagent definitions from git repos, URLs, or local paths",
   "type": "module",
   "bin": {
-    "subagents": "./bin/cli.mjs",
-    "add-subagent": "./bin/cli.mjs"
+    "subagents": "bin/cli.mjs",
+    "get-subagents": "bin/cli.mjs",
+    "add-subagent": "bin/cli.mjs"
   },
   "files": [
     "dist",
@@ -37,6 +38,7 @@
     "cli",
     "agent-subagents",
     "subagents",
+    "get-subagents",
     "ai-agents",
     "amp",
     "claude-code",

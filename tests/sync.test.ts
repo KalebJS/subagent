@@ -8,7 +8,7 @@ describe('experimental_sync command', () => {
   let testDir: string;
 
   beforeEach(() => {
-    testDir = join(tmpdir(), `subagents-sync-test-${Date.now()}`);
+    testDir = join(tmpdir(), `get-subagents-sync-test-${Date.now()}`);
     mkdirSync(testDir, { recursive: true });
   });
 

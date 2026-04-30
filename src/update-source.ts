@@ -44,7 +44,7 @@ function appendFolderAndRef(source: string, subagentPath: string, ref?: string):
 }
 
 /**
- * Build the source argument for `subagents add` during update.
+ * Build the source argument for `get-subagents add` during update.
  */
 export function buildUpdateInstallSource(entry: UpdateSourceEntry): string {
   if (!entry.subagentPath) {
@@ -54,7 +54,7 @@ export function buildUpdateInstallSource(entry: UpdateSourceEntry): string {
 }
 
 /**
- * Build the source argument for `subagents add` during project-level update.
+ * Build the source argument for `get-subagents add` during project-level update.
  */
 export function buildLocalUpdateSource(entry: LocalUpdateSourceEntry): string {
   if (!entry.subagentPath) {

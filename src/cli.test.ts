@@ -3,11 +3,11 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import { runCliOutput, stripLogo, hasLogo } from './test-utils.ts';
 
-describe('subagents CLI', () => {
+describe('get-subagents CLI', () => {
   describe('--help', () => {
     it('should display help message', () => {
       const output = runCliOutput(['--help']);
-      expect(output).toContain('Usage: subagents <command> [options]');
+      expect(output).toContain('Usage: get-subagents <command> [options]');
       expect(output).toContain('Manage Subagents:');
       expect(output).toContain('init [name]');
       expect(output).toContain('add <package>');
@@ -47,9 +47,9 @@ describe('subagents CLI', () => {
     it('should display banner', () => {
       const output = stripLogo(runCliOutput([]));
       expect(output).toContain('The open subagent ecosystem');
-      expect(output).toContain('npx subagents add');
-      expect(output).toContain('npx subagents update');
-      expect(output).toContain('npx subagents init');
+      expect(output).toContain('npx get-subagents add');
+      expect(output).toContain('npx get-subagents update');
+      expect(output).toContain('npx get-subagents init');
     });
   });
 
@@ -58,7 +58,7 @@ describe('subagents CLI', () => {
       const output = runCliOutput(['unknown-command']);
       expect(output).toMatchInlineSnapshot(`
         "Unknown command: unknown-command
-        Run subagents --help for usage.
+        Run get-subagents --help for usage.
         "
       `);
     });

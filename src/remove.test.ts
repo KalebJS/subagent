@@ -9,7 +9,7 @@ describe('remove command', { timeout: 30000 }, () => {
   let agentsDir: string;
 
   beforeEach(() => {
-    testDir = join(tmpdir(), `subagents-remove-test-${Date.now()}`);
+    testDir = join(tmpdir(), `get-subagents-remove-test-${Date.now()}`);
     mkdirSync(testDir, { recursive: true });
     agentsDir = join(testDir, '.agents', 'agents');
     mkdirSync(agentsDir, { recursive: true });
