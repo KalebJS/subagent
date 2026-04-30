@@ -1,0 +1,30 @@
+# prek.toml — Git hook configuration for prek
+# https://prek.j178.dev/configuration/
+
+[[repos]]
+repo = "local"
+
+[[repos.hooks]]
+id = "prettier"
+name = "prettier"
+language = "system"
+pass_filenames = true
+files = { glob = ["*.ts", "*.js", "*.mjs", "*.json", "*.md"] }
+entry = "pnpm exec prettier --write"
+stages = ["pre-commit"]
+
+[[repos.hooks]]
+id = "typecheck"
+name = "typecheck"
+language = "system"
+pass_filenames = false
+entry = "pnpm run type-check"
+stages = ["pre-push"]
+
+[[repos.hooks]]
+id = "test"
+name = "test"
+language = "system"
+pass_filenames = false
+entry = "pnpm test -- --run"
+stages = ["pre-push"]
