@@ -188,24 +188,6 @@ function buildResultLines(
 }
 
 /**
- * Wrapper around p.multiselect that adds a hint for keyboard usage.
- * Accepts options with required labels (matching our usage pattern).
- */
-function multiselect<Value>(opts: {
-  message: string;
-  options: Array<{ value: Value; label: string; hint?: string }>;
-  initialValues?: Value[];
-  required?: boolean;
-}) {
-  return p.multiselect({
-    ...opts,
-    // Cast is safe: our options always have labels, which satisfies p.Option requirements
-    options: opts.options as p.Option<Value>[],
-    message: `${opts.message} ${pc.dim('(space to toggle)')}`,
-  }) as Promise<Value[] | symbol>;
-}
-
-/**
  * Prompts the user to select agents using interactive search.
  * Pre-selects the last used agents if available.
  * Saves the selection for future use.
@@ -496,14 +478,14 @@ export async function runAdd(args: string[], options: AddOptions = {}): Promise<
           hint: s.description.length > 60 ? s.description.slice(0, 57) + '...' : s.description,
         }));
 
-        selected = await multiselect({
+        selected = await searchMultiselect({
           message: 'Select subagents to install',
-          options: skillChoices,
+          items: skillChoices,
           required: true,
         });
       }
 
-      if (p.isCancel(selected)) {
+      if (isCancelled(selected)) {
         p.cancel('Installation cancelled');
         await cleanup(tempDir);
         process.exit(0);
