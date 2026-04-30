@@ -28,7 +28,7 @@ describe('add command', () => {
   let testDir: string;
 
   beforeEach(() => {
-    testDir = join(tmpdir(), `get-subagents-add-test-${Date.now()}`);
+    testDir = join(tmpdir(), `subagents-add-test-${Date.now()}`);
     mkdirSync(testDir, { recursive: true });
   });
 
@@ -303,7 +303,7 @@ describe('find-subagents prompt with -y flag', () => {
   let testDir: string;
 
   beforeEach(() => {
-    testDir = join(tmpdir(), `get-subagents-yes-flag-test-${Date.now()}`);
+    testDir = join(tmpdir(), `subagents-yes-flag-test-${Date.now()}`);
     mkdirSync(testDir, { recursive: true });
   });
 

@@ -126,7 +126,7 @@ export async function runSync(args: string[], options: SyncOptions = {}): Promis
   const cwd = process.cwd();
 
   console.log();
-  p.intro(pc.bgCyan(pc.black(' get-subagents experimental_sync ')));
+  p.intro(pc.bgCyan(pc.black(' subagents experimental_sync ')));
 
   const spinner = p.spinner();
 

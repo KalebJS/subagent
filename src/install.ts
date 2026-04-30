@@ -22,7 +22,7 @@ export async function runInstallFromLock(args: string[]): Promise<void> {
   if (skillEntries.length === 0) {
     p.log.warn('No project subagents found in subagents-lock.json');
     p.log.info(
-      `Add project-level subagents with ${pc.cyan('npx @superkut/get-subagents add <package>')} (without ${pc.cyan('-g')})`
+      `Add project-level subagents with ${pc.cyan('npx @superkut/subagents add <package>')} (without ${pc.cyan('-g')})`
     );
     return;
   }

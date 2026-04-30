@@ -4,7 +4,7 @@ This file provides guidance to AI coding agents working on the `subagents` CLI c
 
 ## Project Overview
 
-`get-subagents` is a CLI for installing cross-agent subagent definitions from git repos, URLs, or local paths into target agent directories. Forked from `vercel-labs/skills`, the installer pipeline is intact but the content unit is now **subagents** (single `.md` files with YAML frontmatter) instead of skills (`SKILL.md` folders).
+`subagents` is a CLI for installing cross-agent subagent definitions from git repos, URLs, or local paths into target agent directories. Forked from `vercel-labs/skills`, the installer pipeline is intact but the content unit is now **subagents** (single `.md` files with YAML frontmatter) instead of skills (`SKILL.md` folders).
 
 ### What is a subagent?
 
@@ -40,17 +40,17 @@ Only agents with documented subagent install paths are included. Adding more req
 
 | Command                          | Description                                            |
 | -------------------------------- | ------------------------------------------------------ |
-| `get-subagents`                  | Show banner with available commands                    |
-| `get-subagents add <pkg>`        | Install subagents from git repos, URLs, or local paths |
-| `get-subagents experimental_install` | Restore subagents from subagents-lock.json         |
-| `get-subagents experimental_sync`    | Sync subagents from node_modules into agent dirs   |
-| `get-subagents list`             | List installed subagents (alias: `ls`)                 |
-| `get-subagents update [names...]`| Update subagents to latest versions                    |
-| `get-subagents find <query>`     | Search for subagents in remote collections             |
-| `get-subagents remove <name>`    | Remove an installed subagent                           |
-| `get-subagents init [name]`      | Create a new AGENT.md template                         |
+| `subagents`                      | Show banner with available commands                    |
+| `subagents add <pkg>`            | Install subagents from git repos, URLs, or local paths |
+| `subagents experimental_install` | Restore subagents from subagents-lock.json             |
+| `subagents experimental_sync`    | Sync subagents from node_modules into agent dirs       |
+| `subagents list`                 | List installed subagents (alias: `ls`)                 |
+| `subagents update [names...]`    | Update subagents to latest versions                    |
+| `subagents find <query>`         | Search for subagents in remote collections             |
+| `subagents remove <name>`        | Remove an installed subagent                           |
+| `subagents init [name]`          | Create a new AGENT.md template                         |
 
-Aliases: `get-subagents a` for `add`. `get-subagents i` / `get-subagents install` (no args) restores from `subagents-lock.json`. `get-subagents ls` for `list`.
+Aliases: `subagents a` for `add`. `subagents i` / `subagents install` (no args) restores from `subagents-lock.json`. `subagents ls` for `list`.
 
 ## Architecture
 
@@ -137,14 +137,14 @@ tests/
 
 ## Update Checking System
 
-### How `get-subagents check` and `get-subagents update` Work
+### How `subagents check` and `subagents update` Work
 
 1. Read `~/.agents/.subagent-lock.json` for installed subagents
 2. Filter to GitHub-backed subagents that have both `subagentFileHash` and `subagentPath`
 3. For each subagent, call `fetchSubagentFileHash(source, subagentPath, token)`. Optional auth token is sourced from `GITHUB_TOKEN`, `GH_TOKEN`, or `gh auth token` to improve rate limits.
 4. `fetchSubagentFileHash` calls GitHub Trees API directly (`/git/trees/<branch>?recursive=1` for `main`, then `master` fallback)
 5. Compare latest file hash with lock file `subagentFileHash`; mismatch means update available
-6. `get-subagents update` reinstalls changed subagents by invoking the current CLI entrypoint directly (`node <repo>/bin/cli.mjs add <source-tree-url> -g -y`) to avoid nested npm exec/npx behavior
+6. `subagents update` reinstalls changed subagents by invoking the current CLI entrypoint directly (`node <repo>/bin/cli.mjs add <source-tree-url> -g -y`) to avoid nested npm exec/npx behavior
 
 ### Lock Files
 
@@ -157,12 +157,12 @@ If reading an older lock file version, it's wiped. Users must reinstall subagent
 
 | Feature                        | Implementation                                                                                                      |
 | ------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
-| `get-subagents add`                | `src/add.ts` - full implementation                                                                                  |
-| `get-subagents experimental_sync`  | `src/sync.ts` - crawl node_modules                                                                                  |
-| `get-subagents find`               | `src/find.ts` - search remote collections                                                                           |
-| `get-subagents check`              | `src/cli.ts` + `fetchSubagentFileHash` in `src/skill-lock.ts`                                                       |
-| `get-subagents update`             | `src/cli.ts` direct hash compare + reinstall via `get-subagents add`                                                    |
-| `get-subagents remove`             | `src/remove.ts` - removes file + lock entries                                                                       |
+| `subagents add`                | `src/add.ts` - full implementation                                                                                  |
+| `subagents experimental_sync`  | `src/sync.ts` - crawl node_modules                                                                                  |
+| `subagents find`               | `src/find.ts` - search remote collections                                                                           |
+| `subagents check`              | `src/cli.ts` + `fetchSubagentFileHash` in `src/skill-lock.ts`                                                       |
+| `subagents update`             | `src/cli.ts` direct hash compare + reinstall via `subagents add`                                                    |
+| `subagents remove`             | `src/remove.ts` - removes file + lock entries                                                                       |
 | Subagent discovery             | `src/subagents.ts` - `discoverSubagents()` scans `*.md` + frontmatter; supports `--search-dir` for recursive search |
 | Frontmatter parsing            | `src/frontmatter.ts` + `src/sanitize.ts`                                                                            |
 | Source parsing (`@agent-name`) | `src/source-parser.ts` - supports `owner/repo@agent-name` syntax                                                    |

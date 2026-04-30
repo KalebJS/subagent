@@ -75,41 +75,41 @@ function showBanner(): void {
   console.log(`${DIM}The open subagent ecosystem${RESET}`);
   console.log();
   console.log(
-    `  ${DIM}$${RESET} ${TEXT}npx @superkut/get-subagents add ${DIM}<package>${RESET}        ${DIM}Add a new subagent${RESET}`
+    `  ${DIM}$${RESET} ${TEXT}npx @superkut/subagents add ${DIM}<package>${RESET}        ${DIM}Add a new subagent${RESET}`
   );
   console.log(
-    `  ${DIM}$${RESET} ${TEXT}npx @superkut/get-subagents remove${RESET}               ${DIM}Remove installed subagents${RESET}`
+    `  ${DIM}$${RESET} ${TEXT}npx @superkut/subagents remove${RESET}               ${DIM}Remove installed subagents${RESET}`
   );
   console.log(
-    `  ${DIM}$${RESET} ${TEXT}npx @superkut/get-subagents list${RESET}                 ${DIM}List installed subagents${RESET}`
+    `  ${DIM}$${RESET} ${TEXT}npx @superkut/subagents list${RESET}                 ${DIM}List installed subagents${RESET}`
   );
   console.log(
-    `  ${DIM}$${RESET} ${TEXT}npx @superkut/get-subagents find ${DIM}[query]${RESET}         ${DIM}Search for subagents${RESET}`
-  );
-  console.log();
-  console.log(
-    `  ${DIM}$${RESET} ${TEXT}npx @superkut/get-subagents update${RESET}               ${DIM}Update installed subagents${RESET}`
+    `  ${DIM}$${RESET} ${TEXT}npx @superkut/subagents find ${DIM}[query]${RESET}         ${DIM}Search for subagents${RESET}`
   );
   console.log();
   console.log(
-    `  ${DIM}$${RESET} ${TEXT}npx @superkut/get-subagents experimental_install${RESET} ${DIM}Restore from subagents-lock.json${RESET}`
-  );
-  console.log(
-    `  ${DIM}$${RESET} ${TEXT}npx @superkut/get-subagents init ${DIM}[name]${RESET}          ${DIM}Create a new subagent${RESET}`
-  );
-  console.log(
-    `  ${DIM}$${RESET} ${TEXT}npx @superkut/get-subagents experimental_sync${RESET}    ${DIM}Sync subagents from node_modules${RESET}`
+    `  ${DIM}$${RESET} ${TEXT}npx @superkut/subagents update${RESET}               ${DIM}Update installed subagents${RESET}`
   );
   console.log();
   console.log(
-    `${DIM}try:${RESET} npx @superkut/get-subagents add VoltAgent/awesome-claude-code-subagents`
+    `  ${DIM}$${RESET} ${TEXT}npx @superkut/subagents experimental_install${RESET} ${DIM}Restore from subagents-lock.json${RESET}`
+  );
+  console.log(
+    `  ${DIM}$${RESET} ${TEXT}npx @superkut/subagents init ${DIM}[name]${RESET}          ${DIM}Create a new subagent${RESET}`
+  );
+  console.log(
+    `  ${DIM}$${RESET} ${TEXT}npx @superkut/subagents experimental_sync${RESET}    ${DIM}Sync subagents from node_modules${RESET}`
+  );
+  console.log();
+  console.log(
+    `${DIM}try:${RESET} npx @superkut/subagents add VoltAgent/awesome-claude-code-subagents`
   );
   console.log();
 }
 
 function showHelp(): void {
   console.log(`
-${BOLD}Usage:${RESET} get-subagents <command> [options]
+${BOLD}Usage:${RESET} subagents <command> [options]
 
 ${BOLD}Manage Subagents:${RESET}
   add <package>        Add a subagent package (alias: a)
@@ -163,31 +163,31 @@ ${BOLD}Options:${RESET}
   --version, -v     Show version number
 
 ${BOLD}Examples:${RESET}
-  ${DIM}$${RESET} get-subagents add VoltAgent/awesome-claude-code-subagents
-  ${DIM}$${RESET} get-subagents add VoltAgent/awesome-claude-code-subagents -g
-  ${DIM}$${RESET} get-subagents add VoltAgent/awesome-claude-code-subagents --agent claude-code cursor
-  ${DIM}$${RESET} get-subagents remove                        ${DIM}# interactive remove${RESET}
-  ${DIM}$${RESET} get-subagents remove code-reviewer           ${DIM}# remove by name${RESET}
-  ${DIM}$${RESET} get-subagents rm --global my-subagent
-  ${DIM}$${RESET} get-subagents list                          ${DIM}# list project subagents${RESET}
-  ${DIM}$${RESET} get-subagents ls -g                         ${DIM}# list global subagents${RESET}
-  ${DIM}$${RESET} get-subagents ls -a claude-code             ${DIM}# filter by agent${RESET}
-  ${DIM}$${RESET} get-subagents ls --json                      ${DIM}# JSON output${RESET}
-  ${DIM}$${RESET} get-subagents find                          ${DIM}# interactive search${RESET}
-  ${DIM}$${RESET} get-subagents find typescript               ${DIM}# search by keyword${RESET}
-  ${DIM}$${RESET} get-subagents update
-  ${DIM}$${RESET} get-subagents update my-subagent            ${DIM}# update a single subagent${RESET}
-  ${DIM}$${RESET} get-subagents update -g                     ${DIM}# update global subagents only${RESET}
-  ${DIM}$${RESET} get-subagents experimental_install            ${DIM}# restore from subagents-lock.json${RESET}
-  ${DIM}$${RESET} get-subagents init my-subagent
-  ${DIM}$${RESET} get-subagents experimental_sync              ${DIM}# sync from node_modules${RESET}
-  ${DIM}$${RESET} get-subagents experimental_sync -y           ${DIM}# sync without prompts${RESET}
+  ${DIM}$${RESET} subagents add VoltAgent/awesome-claude-code-subagents
+  ${DIM}$${RESET} subagents add VoltAgent/awesome-claude-code-subagents -g
+  ${DIM}$${RESET} subagents add VoltAgent/awesome-claude-code-subagents --agent claude-code cursor
+  ${DIM}$${RESET} subagents remove                        ${DIM}# interactive remove${RESET}
+  ${DIM}$${RESET} subagents remove code-reviewer           ${DIM}# remove by name${RESET}
+  ${DIM}$${RESET} subagents rm --global my-subagent
+  ${DIM}$${RESET} subagents list                          ${DIM}# list project subagents${RESET}
+  ${DIM}$${RESET} subagents ls -g                         ${DIM}# list global subagents${RESET}
+  ${DIM}$${RESET} subagents ls -a claude-code             ${DIM}# filter by agent${RESET}
+  ${DIM}$${RESET} subagents ls --json                      ${DIM}# JSON output${RESET}
+  ${DIM}$${RESET} subagents find                          ${DIM}# interactive search${RESET}
+  ${DIM}$${RESET} subagents find typescript               ${DIM}# search by keyword${RESET}
+  ${DIM}$${RESET} subagents update
+  ${DIM}$${RESET} subagents update my-subagent            ${DIM}# update a single subagent${RESET}
+  ${DIM}$${RESET} subagents update -g                     ${DIM}# update global subagents only${RESET}
+  ${DIM}$${RESET} subagents experimental_install            ${DIM}# restore from subagents-lock.json${RESET}
+  ${DIM}$${RESET} subagents init my-subagent
+  ${DIM}$${RESET} subagents experimental_sync              ${DIM}# sync from node_modules${RESET}
+  ${DIM}$${RESET} subagents experimental_sync -y           ${DIM}# sync without prompts${RESET}
 `);
 }
 
 function showRemoveHelp(): void {
   console.log(`
-${BOLD}Usage:${RESET} get-subagents remove [subagents...] [options]
+${BOLD}Usage:${RESET} subagents remove [subagents...] [options]
 
 ${BOLD}Description:${RESET}
   Remove installed subagents from agents. If no subagent names are provided,
@@ -204,13 +204,13 @@ ${BOLD}Options:${RESET}
   --all              Shorthand for --skill '*' --agent '*' -y
 
 ${BOLD}Examples:${RESET}
-  ${DIM}$${RESET} get-subagents remove                           ${DIM}# interactive selection${RESET}
-  ${DIM}$${RESET} get-subagents remove my-subagent                ${DIM}# remove specific subagent${RESET}
-  ${DIM}$${RESET} get-subagents remove sub1 sub2 -y               ${DIM}# remove multiple subagents${RESET}
-  ${DIM}$${RESET} get-subagents remove --global my-subagent       ${DIM}# remove from global scope${RESET}
-  ${DIM}$${RESET} get-subagents rm --agent claude-code my-subagent ${DIM}# remove from specific agent${RESET}
-  ${DIM}$${RESET} get-subagents remove --all                      ${DIM}# remove all subagents${RESET}
-  ${DIM}$${RESET} get-subagents remove --skill '*' -a cursor      ${DIM}# remove all subagents from cursor${RESET}
+  ${DIM}$${RESET} subagents remove                           ${DIM}# interactive selection${RESET}
+  ${DIM}$${RESET} subagents remove my-subagent                ${DIM}# remove specific subagent${RESET}
+  ${DIM}$${RESET} subagents remove sub1 sub2 -y               ${DIM}# remove multiple subagents${RESET}
+  ${DIM}$${RESET} subagents remove --global my-subagent       ${DIM}# remove from global scope${RESET}
+  ${DIM}$${RESET} subagents rm --agent claude-code my-subagent ${DIM}# remove from specific agent${RESET}
+  ${DIM}$${RESET} subagents remove --all                      ${DIM}# remove all subagents${RESET}
+  ${DIM}$${RESET} subagents remove --skill '*' -a cursor      ${DIM}# remove all subagents from cursor${RESET}
 `);
 }
 
@@ -264,10 +264,10 @@ Describe when this subagent should be used.
   console.log();
   console.log(`${DIM}Publishing:${RESET}`);
   console.log(
-    `  ${DIM}GitHub:${RESET}  Push to a repo, then ${TEXT}npx @superkut/get-subagents add <owner>/<repo>${RESET}`
+    `  ${DIM}GitHub:${RESET}  Push to a repo, then ${TEXT}npx @superkut/subagents add <owner>/<repo>${RESET}`
   );
   console.log(
-    `  ${DIM}URL:${RESET}     Host the file, then ${TEXT}npx @superkut/get-subagents add https://example.com/${displayPath}${RESET}`
+    `  ${DIM}URL:${RESET}     Host the file, then ${TEXT}npx @superkut/subagents add https://example.com/${displayPath}${RESET}`
   );
   console.log();
 }
@@ -532,9 +532,7 @@ function printSkippedSkills(skipped: SkippedSubagent[]): void {
       const names = subs.map((s) => sanitizeMetadata(s.name)).join(', ');
       console.log(`  ${TEXT}•${RESET} ${names} ${DIM}(${reason})${RESET}`);
     }
-    console.log(
-      `    ${DIM}To update: ${TEXT}npx @superkut/get-subagents add ${source} -g -y${RESET}`
-    );
+    console.log(`    ${DIM}To update: ${TEXT}npx @superkut/subagents add ${source} -g -y${RESET}`);
   }
 }
 
@@ -575,7 +573,7 @@ async function updateGlobalSkills(
     if (!skillFilter) {
       console.log(`${DIM}No global subagents tracked in lock file.${RESET}`);
       console.log(
-        `${DIM}Install subagents with${RESET} ${TEXT}npx @superkut/get-subagents add <package> -g${RESET}`
+        `${DIM}Install subagents with${RESET} ${TEXT}npx @superkut/subagents add <package> -g${RESET}`
       );
     }
     return { successCount, failCount, checkedCount: 0 };
@@ -700,7 +698,7 @@ async function updateProjectSkills(
     if (!skillFilter) {
       console.log(`${DIM}No project subagents to update.${RESET}`);
       console.log(
-        `${DIM}Install project subagents with${RESET} ${TEXT}npx @superkut/get-subagents add <package>${RESET}`
+        `${DIM}Install project subagents with${RESET} ${TEXT}npx @superkut/subagents add <package>${RESET}`
       );
     }
     return { successCount, failCount, foundCount: 0 };
@@ -770,9 +768,7 @@ function printLegacyProjectSkills(
   for (const skill of legacy) {
     const reinstall = formatSourceInput(skill.entry.source, skill.entry.ref);
     console.log(`  ${TEXT}•${RESET} ${sanitizeMetadata(skill.name)}`);
-    console.log(
-      `    ${DIM}To refresh: ${TEXT}npx @superkut/get-subagents add ${reinstall} -y${RESET}`
-    );
+    console.log(`    ${DIM}To refresh: ${TEXT}npx @superkut/subagents add ${reinstall} -y${RESET}`);
   }
 }
 
@@ -930,7 +926,7 @@ async function main(): Promise<void> {
 
     default:
       console.log(`Unknown command: ${command}`);
-      console.log(`Run ${BOLD}get-subagents --help${RESET} for usage.`);
+      console.log(`Run ${BOLD}subagents --help${RESET} for usage.`);
   }
 }
 

@@ -9,7 +9,7 @@ describe('list command', () => {
   let testDir: string;
 
   beforeEach(() => {
-    testDir = join(tmpdir(), `get-subagents-list-test-${Date.now()}`);
+    testDir = join(tmpdir(), `subagents-list-test-${Date.now()}`);
     mkdirSync(testDir, { recursive: true });
   });
 
@@ -283,16 +283,16 @@ description: A test subagent for listing
 
     it('should include list examples in help', () => {
       const result = runCli(['--help']);
-      expect(result.stdout).toContain('get-subagents list');
-      expect(result.stdout).toContain('get-subagents ls -g');
-      expect(result.stdout).toContain('get-subagents ls -a claude-code');
+      expect(result.stdout).toContain('subagents list');
+      expect(result.stdout).toContain('subagents ls -g');
+      expect(result.stdout).toContain('subagents ls -a claude-code');
     });
   });
 
   describe('banner', () => {
     it('should include list command in banner', () => {
       const result = runCli([]);
-      expect(result.stdout).toContain('npx @superkut/get-subagents list');
+      expect(result.stdout).toContain('npx @superkut/subagents list');
       expect(result.stdout).toContain('List installed subagents');
     });
   });

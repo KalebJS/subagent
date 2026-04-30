@@ -1,40 +1,42 @@
-# get-subagents
+# subagents
 
 A CLI for installing cross-agent subagent definitions from git repos, URLs, or local paths into target agent directories.
 
 <!-- agent-list:start -->
+
 Supports **OpenCode**, **Claude Code**, **Codex**, **Cursor**, and [2 more](#supported-agents).
+
 <!-- agent-list:end -->
 
 ## Install a Subagent
 
 ```bash
-npx @superkut/get-subagents add VoltAgent/awesome-claude-code-subagents
+npx @superkut/subagents add VoltAgent/awesome-claude-code-subagents
 ```
 
 ### Source Formats
 
 ```bash
 # GitHub shorthand (owner/repo)
-npx @superkut/get-subagents add VoltAgent/awesome-claude-code-subagents
+npx @superkut/subagents add VoltAgent/awesome-claude-code-subagents
 
 # Full GitHub URL
-npx @superkut/get-subagents add https://github.com/VoltAgent/awesome-claude-code-subagents
+npx @superkut/subagents add https://github.com/VoltAgent/awesome-claude-code-subagents
 
 # Direct path to a subagent in a repo
-npx @superkut/get-subagents add https://github.com/owner/repo/tree/main/agents/my-subagent
+npx @superkut/subagents add https://github.com/owner/repo/tree/main/agents/my-subagent
 
 # GitLab URL
-npx @superkut/get-subagents add https://gitlab.com/org/repo
+npx @superkut/subagents add https://gitlab.com/org/repo
 
 # Any git URL
-npx @superkut/get-subagents add git@github.com:owner/repo.git
+npx @superkut/subagents add git@github.com:owner/repo.git
 
 # Local path
-npx @superkut/get-subagents add ./my-local-subagents
+npx @superkut/subagents add ./my-local-subagents
 
 # Install a specific subagent by name
-npx @superkut/get-subagents add owner/repo@subagent-name
+npx @superkut/subagents add owner/repo@subagent-name
 ```
 
 ### Options
@@ -44,42 +46,42 @@ npx @superkut/get-subagents add owner/repo@subagent-name
 | `-g, --global`            | Install to user directory instead of project                                                                                                       |
 | `-a, --agent <agents...>` | <!-- agent-names:start -->Target specific agents (e.g., `claude-code`, `codex`). See [Supported Agents](#supported-agents)<!-- agent-names:end --> |
 | `-s, --skill <names...>`  | Install specific subagents by name (use `'*'` for all)                                                                                             |
-| `-l, --list`              | List available subagents without installing                                                                                                         |
+| `-l, --list`              | List available subagents without installing                                                                                                        |
 | `--copy`                  | Copy files instead of symlinking to agent directories                                                                                              |
 | `-y, --yes`               | Skip all confirmation prompts                                                                                                                      |
-| `--all`                   | Install all subagents to all agents without prompts                                                                                                   |
+| `--all`                   | Install all subagents to all agents without prompts                                                                                                |
 
 ### Examples
 
 ```bash
 # List subagents in a repository
-npx get-subagents add VoltAgent/awesome-claude-code-subagents --list
+npx subagents add VoltAgent/awesome-claude-code-subagents --list
 
 # Install specific subagents
-npx get-subagents add owner/repo --skill code-reviewer --skill test-runner
+npx subagents add owner/repo --skill code-reviewer --skill test-runner
 
 # Install to specific agents
-npx get-subagents add owner/repo -a claude-code -a opencode
+npx subagents add owner/repo -a claude-code -a opencode
 
 # Non-interactive installation (CI/CD friendly)
-npx get-subagents add owner/repo --skill code-reviewer -g -a claude-code -y
+npx subagents add owner/repo --skill code-reviewer -g -a claude-code -y
 
 # Install all subagents from a repo to all agents
-npx get-subagents add owner/repo --all
+npx subagents add owner/repo --all
 
 # Install all subagents to specific agents
-npx get-subagents add owner/repo --skill '*' -a claude-code
+npx subagents add owner/repo --skill '*' -a claude-code
 
 # Install specific subagents to all agents
-npx get-subagents add owner/repo --agent '*' --skill code-reviewer
+npx subagents add owner/repo --agent '*' --skill code-reviewer
 ```
 
 ### Installation Scope
 
-| Scope       | Flag      | Location             | Use Case                                      |
-| ----------- | --------- | -------------------- | --------------------------------------------- |
-| **Project** | (default) | `./<agent>/agents/`  | Committed with your project, shared with team |
-| **Global**  | `-g`      | `~/<agent>/agents/`  | Available across all projects                 |
+| Scope       | Flag      | Location            | Use Case                                      |
+| ----------- | --------- | ------------------- | --------------------------------------------- |
+| **Project** | (default) | `./<agent>/agents/` | Committed with your project, shared with team |
+| **Global**  | `-g`      | `~/<agent>/agents/` | Available across all projects                 |
 
 ### Installation Methods
 
@@ -92,59 +94,59 @@ When installing interactively, you can choose:
 
 ## Other Commands
 
-| Command                      | Description                                        |
-| ---------------------------- | -------------------------------------------------- |
-| `npx @superkut/get-subagents list`         | List installed subagents (alias: `ls`)             |
-| `npx @superkut/get-subagents find [query]` | Search for subagents interactively or by keyword |
-| `npx @superkut/get-subagents remove [name]` | Remove installed subagents from agents           |
-| `npx @superkut/get-subagents update [names]` | Update installed subagents to latest versions    |
-| `npx @superkut/get-subagents init [name]` | Create a new AGENT.md template                    |
+| Command                                  | Description                                      |
+| ---------------------------------------- | ------------------------------------------------ |
+| `npx @superkut/subagents list`           | List installed subagents (alias: `ls`)           |
+| `npx @superkut/subagents find [query]`   | Search for subagents interactively or by keyword |
+| `npx @superkut/subagents remove [name]`  | Remove installed subagents from agents           |
+| `npx @superkut/subagents update [names]` | Update installed subagents to latest versions    |
+| `npx @superkut/subagents init [name]`    | Create a new AGENT.md template                   |
 
-### `get-subagents list`
+### `subagents list`
 
 List all installed subagents. Similar to `npm ls`.
 
 ```bash
 # List all installed subagents (project and global)
-npx get-subagents list
+npx subagents list
 
 # List only global subagents
-npx get-subagents ls -g
+npx subagents ls -g
 
 # Filter by specific agents
-npx get-subagents ls -a claude-code -a cursor
+npx subagents ls -a claude-code -a cursor
 ```
 
-### `get-subagents find`
+### `subagents find`
 
 Search for subagents interactively or by keyword.
 
 ```bash
 # Interactive search (fzf-style)
-npx get-subagents find
+npx subagents find
 
 # Search by keyword
-npx get-subagents find typescript
+npx subagents find typescript
 ```
 
-### `get-subagents update`
+### `subagents update`
 
 ```bash
 # Update all subagents (interactive scope prompt)
-npx get-subagents update
+npx subagents update
 
 # Update a single subagent by name
-npx get-subagents update my-subagent
+npx subagents update my-subagent
 
 # Update multiple specific subagents
-npx get-subagents update code-reviewer test-runner
+npx subagents update code-reviewer test-runner
 
 # Update only global or project subagents
-npx get-subagents update -g
-npx get-subagents update -p
+npx subagents update -g
+npx subagents update -p
 
 # Non-interactive (auto-detects scope: project if in a project, else global)
-npx get-subagents update -y
+npx subagents update -y
 ```
 
 | Option          | Description                                                               |
@@ -152,56 +154,56 @@ npx get-subagents update -y
 | `-g, --global`  | Only update global subagents                                              |
 | `-p, --project` | Only update project subagents                                             |
 | `-y, --yes`     | Skip scope prompt (auto-detect: project if in a project dir, else global) |
-| `[names...]`    | Update specific subagents by name instead of all                           |
+| `[names...]`    | Update specific subagents by name instead of all                          |
 
-### `get-subagents init`
+### `subagents init`
 
 ```bash
 # Create AGENT.md in current directory
-npx get-subagents init
+npx subagents init
 
 # Create a new subagent in a subdirectory
-npx get-subagents init my-subagent
+npx subagents init my-subagent
 ```
 
-### `get-subagents remove`
+### `subagents remove`
 
 Remove installed subagents from agents.
 
 ```bash
 # Remove interactively (select from installed subagents)
-npx get-subagents remove
+npx subagents remove
 
 # Remove specific subagent by name
-npx get-subagents remove my-subagent
+npx subagents remove my-subagent
 
 # Remove multiple subagents
-npx get-subagents remove code-reviewer test-runner
+npx subagents remove code-reviewer test-runner
 
 # Remove from global scope
-npx get-subagents remove --global my-subagent
+npx subagents remove --global my-subagent
 
 # Remove from specific agents only
-npx get-subagents remove --agent claude-code cursor my-subagent
+npx subagents remove --agent claude-code cursor my-subagent
 
 # Remove all installed subagents without confirmation
-npx get-subagents remove --all
+npx subagents remove --all
 
 # Remove all subagents from a specific agent
-npx get-subagents remove --skill '*' -a cursor
+npx subagents remove --skill '*' -a cursor
 
 # Remove a specific subagent from all agents
-npx get-subagents remove my-subagent --agent '*'
+npx subagents remove my-subagent --agent '*'
 
 # Use 'rm' alias
-npx get-subagents rm my-subagent
+npx subagents rm my-subagent
 ```
 
 | Option         | Description                                      |
 | -------------- | ------------------------------------------------ |
 | `-g, --global` | Remove from global scope (~/) instead of project |
 | `-a, --agent`  | Remove from specific agents (use `'*'` for all)  |
-| `-s, --skill`  | Specify subagents to remove (use `'*'` for all)   |
+| `-s, --skill`  | Specify subagents to remove (use `'*'` for all)  |
 | `-y, --yes`    | Skip confirmation prompts                        |
 | `--all`        | Shorthand for `--skill '*' --agent '*' -y`       |
 
@@ -227,6 +229,7 @@ Subagents are installed **verbatim** to each target agent's directory — no per
 The CLI discovers subagents by scanning for `*.md` files with `name` + `description` YAML frontmatter. It searches these locations within a repository:
 
 <!-- subagent-discovery:start -->
+
 - Root directory (any `.md` file with valid frontmatter)
 - `agents/`
 - `subagents/`
@@ -246,14 +249,16 @@ If no subagents are found in standard locations, a recursive search is performed
 Subagents can be installed to any of these agents:
 
 <!-- supported-agents:start -->
-| Agent | `--agent` | Project Path | Global Path |
-|-------|-----------|--------------|-------------|
-| Amp | `amp` | `.agents/agents/` | `~/.config/agents/agents/` |
-| Claude Code | `claude-code` | `.claude/agents/` | `~/.claude/agents/` |
-| Codex | `codex` | `.codex/agents/` | `~/.codex/agents/` |
-| Cursor | `cursor` | `.cursor/agents/` | `~/.cursor/agents/` |
-| Factory (Droid) | `factory` | `.factory/droids/` | `~/.factory/droids/` |
-| OpenCode | `opencode` | `.opencode/agents/` | `~/.config/opencode/agents/` |
+
+| Agent           | `--agent`     | Project Path        | Global Path                  |
+| --------------- | ------------- | ------------------- | ---------------------------- |
+| Amp             | `amp`         | `.agents/agents/`   | `~/.config/agents/agents/`   |
+| Claude Code     | `claude-code` | `.claude/agents/`   | `~/.claude/agents/`          |
+| Codex           | `codex`       | `.codex/agents/`    | `~/.codex/agents/`           |
+| Cursor          | `cursor`      | `.cursor/agents/`   | `~/.cursor/agents/`          |
+| Factory (Droid) | `factory`     | `.factory/droids/`  | `~/.factory/droids/`         |
+| OpenCode        | `opencode`    | `.opencode/agents/` | `~/.config/opencode/agents/` |
+
 <!-- supported-agents:end -->
 
 The CLI automatically detects which coding agents you have installed. If none are detected, you'll be prompted to select which agents to install to.
@@ -331,10 +336,10 @@ Ensure you have write access to the target directory.
 
 ```bash
 # Install internal subagents
-INSTALL_INTERNAL_SKILLS=1 npx @superkut/get-subagents add owner/repo --list
+INSTALL_INTERNAL_SKILLS=1 npx @superkut/subagents add owner/repo --list
 
 # Use a GitHub token for higher rate limits
-GITHUB_TOKEN=ghp_xxx npx @superkut/get-subagents add owner/repo
+GITHUB_TOKEN=ghp_xxx npx @superkut/subagents add owner/repo
 ```
 
 ## Telemetry

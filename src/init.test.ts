@@ -8,7 +8,7 @@ describe('init command', () => {
   let testDir: string;
 
   beforeEach(() => {
-    testDir = join(tmpdir(), `get-subagents-test-${Date.now()}`);
+    testDir = join(tmpdir(), `subagents-test-${Date.now()}`);
     mkdirSync(testDir, { recursive: true });
   });
 
@@ -31,8 +31,8 @@ describe('init command', () => {
         2. Update the name and description in the frontmatter
 
       Publishing:
-        GitHub:  Push to a repo, then npx @superkut/get-subagents add <owner>/<repo>
-        URL:     Host the file, then npx @superkut/get-subagents add https://example.com/my-test-agent.md
+        GitHub:  Push to a repo, then npx @superkut/subagents add <owner>/<repo>
+        URL:     Host the file, then npx @superkut/subagents add https://example.com/my-test-agent.md
 
       "
     `);
@@ -80,9 +80,9 @@ describe('init command', () => {
     expect(output).toContain('Initialized subagent:');
     expect(output).toContain('Publishing:');
     expect(output).toContain('GitHub:');
-    expect(output).toContain('npx @superkut/get-subagents add <owner>/<repo>');
+    expect(output).toContain('npx @superkut/subagents add <owner>/<repo>');
     expect(output).toContain('URL:');
-    expect(output).toContain('npx @superkut/get-subagents add https://example.com/');
+    expect(output).toContain('npx @superkut/subagents add https://example.com/');
   });
 
   it('should show publishing hints with subagent path', () => {
@@ -90,10 +90,10 @@ describe('init command', () => {
 
     expect(output).toContain('Publishing:');
     expect(output).toContain(
-      'GitHub:  Push to a repo, then npx @superkut/get-subagents add <owner>/<repo>'
+      'GitHub:  Push to a repo, then npx @superkut/subagents add <owner>/<repo>'
     );
     expect(output).toContain(
-      'URL:     Host the file, then npx @superkut/get-subagents add https://example.com/my-agent.md'
+      'URL:     Host the file, then npx @superkut/subagents add https://example.com/my-agent.md'
     );
   });
 
